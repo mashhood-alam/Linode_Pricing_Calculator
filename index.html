@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Akamai Cloud Compute Cost Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900;1,6..12,400&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #009BDE;
@@ -26,7 +29,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
@@ -228,23 +231,25 @@
     .price-alt { font-size: 12px; color: var(--text-muted); text-align: right; }
 
     /* Actions */
-    .card-actions { display: flex; gap: 8px; align-items: center; }
+    .card-actions { display: flex; align-items: center; }
     .qty-wrap {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 4px;
       background: var(--bg);
       border-radius: 8px;
-      padding: 4px;
+      padding: 5px 8px;
+      width: 100%;
     }
     .qty-btn {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border: none;
       background: white;
-      border-radius: 6px;
+      border-radius: 7px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--text);
       display: flex;
@@ -254,21 +259,14 @@
       transition: all .15s;
     }
     .qty-btn:hover { background: var(--primary); color: white; }
-    .qty-num { min-width: 26px; text-align: center; font-weight: 700; font-size: 14px; }
-    .action-btn {
+    .qty-num {
       flex: 1;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .15s;
+      text-align: center;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text);
     }
-    .btn-add { background: var(--primary); color: white; }
-    .btn-add:hover { background: var(--primary-dark); }
-    .btn-remove { background: var(--danger); color: white; }
-    .btn-remove:hover { background: #dc2626; }
+    .qty-num.qty-active { color: var(--primary); }
 
     /* ── LKE section ── */
     .lke-stack { display: flex; flex-direction: column; gap: 16px; }
@@ -368,6 +366,36 @@
       transition: background .15s;
     }
     .btn-add-cluster:hover { background: var(--primary-dark); }
+
+    /* ── LKE added-to-estimate list ── */
+    .lke-added-list { display: flex; flex-direction: column; gap: 8px; }
+    .lke-added-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border: 1.5px solid var(--primary);
+      border-radius: 9px;
+      background: var(--primary-light);
+    }
+    .lke-added-ico { font-size: 18px; flex-shrink: 0; }
+    .lke-added-info { flex: 1; min-width: 0; }
+    .lke-added-name { font-weight: 700; font-size: 13px; }
+    .lke-added-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lke-added-price { font-weight: 800; font-size: 13px; color: var(--primary); white-space: nowrap; }
+    .lke-added-rm {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 15px;
+      padding: 4px 6px;
+      border-radius: 5px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: all .15s;
+    }
+    .lke-added-rm:hover { background: #fee2e2; color: var(--danger); }
 
     /* ── Cart / Sidebar ── */
     .sidebar {
@@ -551,7 +579,7 @@
       <div class="cart-empty">
         <div class="cart-empty-ico">🛒</div>
         <div class="cart-empty-title">No items yet</div>
-        <div class="cart-empty-desc">Select a plan and click<br>"Add to Estimate" to get started.</div>
+        <div class="cart-empty-desc">Use the − / + buttons on any plan<br>to add it to your estimate.</div>
       </div>
     </div>
     <div class="cart-ft" id="cartFt" style="display:none">
@@ -685,7 +713,7 @@ const SECTION_INFO = {
 
 function cardHTML(plan, type) {
   const inCart = !!(cart[plan.id] && cart[plan.id].qty > 0);
-  const qty    = inCart ? cart[plan.id].qty : 1;
+  const qty    = cart[plan.id]?.qty ?? 0;
   const pr     = fmtPrice(plan);
   const isGPU  = !!plan.gpuModel;
 
@@ -723,10 +751,6 @@ function cardHTML(plan, type) {
       }
     </div>`;
 
-  const actionBtn = inCart
-    ? `<button class="action-btn btn-remove" onclick="removeFromCart('${plan.id}')">✓ In Estimate</button>`
-    : `<button class="action-btn btn-add"    onclick="addToCart('${plan.id}','${type}')">Add to Estimate</button>`;
-
   return `
     <div class="plan-card ${inCart?'in-cart':''}" id="card-${plan.id}">
       <div class="plan-top">
@@ -745,10 +769,9 @@ function cardHTML(plan, type) {
       <div class="card-actions">
         <div class="qty-wrap">
           <button class="qty-btn" onclick="adjustQty('${plan.id}','${type}',-1)">−</button>
-          <span class="qty-num" id="qty-${plan.id}">${qty}</span>
+          <span class="qty-num ${qty > 0 ? 'qty-active' : ''}" id="qty-${plan.id}">${qty}</span>
           <button class="qty-btn" onclick="adjustQty('${plan.id}','${type}', 1)">+</button>
         </div>
-        ${actionBtn}
       </div>
     </div>`;
 }
@@ -808,12 +831,32 @@ function renderLKE() {
   }, 0);
   const total = cpCost + nodeCost;
 
+  // Clusters already added to the estimate
+  const addedClusters = Object.values(cart).filter(item => item.type === 'lke');
+  const addedBlock = addedClusters.length ? `
+    <div class="lke-block">
+      <div class="lke-block-title">✅ In Your Estimate</div>
+      <div class="lke-added-list">
+        ${addedClusters.map(({ plan }) => `
+          <div class="lke-added-row">
+            <div class="lke-added-ico">☸️</div>
+            <div class="lke-added-info">
+              <div class="lke-added-name">${plan.name}</div>
+              <div class="lke-added-detail">${plan.detail || 'Control plane only'}</div>
+            </div>
+            <div class="lke-added-price">$${plan.monthly.toFixed(0)}/mo</div>
+            <button class="lke-added-rm" onclick="removeLKEFromCart('${plan.id}')" title="Remove from estimate">✕</button>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
   return `
     <div class="section-hd">
       <h2>Linode Kubernetes Engine (LKE)</h2>
       <p>Managed Kubernetes with an automated control plane. Pay only for the worker nodes you provision.</p>
     </div>
     <div class="lke-stack">
+      ${addedBlock}
       <div class="lke-block">
         <div class="lke-block-title">🎛️ Control Plane Tier</div>
         <div class="cp-grid">${cpHTML}</div>
@@ -834,7 +877,7 @@ function renderLKE() {
               Control plane: $${cpCost}/mo &nbsp;·&nbsp; Nodes: $${nodeCost.toFixed(0)}/mo
             </div>
           </div>
-          <button class="btn-add-cluster" onclick="addLKEToCart()">Add to Estimate</button>
+          <button class="btn-add-cluster" onclick="addLKEToCart()">+ Add to Estimate</button>
         </div>
       </div>
     </div>`;
@@ -870,28 +913,50 @@ function setBilling(mode) {
 //  QUANTITY
 // ═══════════════════════════════════════
 function adjustQty(id, type, delta) {
+  const allPlans = [...PLANS.shared, ...PLANS.dedicated, ...PLANS.premium, ...PLANS.highmem, ...PLANS.gpu];
+  const plan = allPlans.find(p => p.id === id);
+  if (!plan) return;
+
+  const current = cart[id]?.qty ?? 0;
+  const v = Math.max(0, current + delta);
+
+  // Update qty display and active colour in-place (no full re-render)
   const el = document.getElementById(`qty-${id}`);
-  if (!el) return;
-  let v = Math.max(1, parseInt(el.textContent||'1') + delta);
-  el.textContent = v;
-  if (cart[id]) { cart[id].qty = v; renderCart(); }
+  if (el) {
+    el.textContent = v;
+    el.classList.toggle('qty-active', v > 0);
+  }
+
+  // Update card highlight
+  const card = document.getElementById(`card-${id}`);
+  if (card) card.classList.toggle('in-cart', v > 0);
+
+  // Sync cart
+  if (v === 0) {
+    delete cart[id];
+  } else {
+    cart[id] = { plan, qty: v, type };
+  }
+
+  renderCart();
 }
 
 // ═══════════════════════════════════════
 //  CART
 // ═══════════════════════════════════════
-function addToCart(id, type) {
-  const plan = PLANS[type].find(p => p.id === id);
-  if (!plan) return;
-  const qty = parseInt(document.getElementById(`qty-${id}`)?.textContent || '1');
-  cart[id] = { plan, qty, type };
-  renderContent();
-  renderCart();
-  toast(`Added ${qty > 1 ? qty + '× ' : ''}${plan.name}`);
-}
-
 function removeFromCart(id) {
   delete cart[id];
+  // Update the card visuals in-place without a full re-render
+  const card = document.getElementById(`card-${id}`);
+  if (card) card.classList.remove('in-cart');
+  const el = document.getElementById(`qty-${id}`);
+  if (el) { el.textContent = '0'; el.classList.remove('qty-active'); }
+  renderCart();
+}
+
+function removeLKEFromCart(id) {
+  delete cart[id];
+  // LKE tab needs a full re-render to update the "In Your Estimate" block
   renderContent();
   renderCart();
 }
@@ -947,7 +1012,7 @@ function renderCart() {
       <div class="cart-empty">
         <div class="cart-empty-ico">🛒</div>
         <div class="cart-empty-title">No items yet</div>
-        <div class="cart-empty-desc">Select a plan and click<br>"Add to Estimate" to get started.</div>
+        <div class="cart-empty-desc">Use the − / + buttons on any plan<br>to add it to your estimate.</div>
       </div>`;
     ft.style.display = 'none';
     return;
