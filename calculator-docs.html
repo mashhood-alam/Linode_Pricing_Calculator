@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cost Calculator — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900;1,6..12,400&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary:       #009BDE;
@@ -24,7 +27,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
@@ -453,7 +456,7 @@
 
 <!-- ═══════ HEADER ═══════ -->
 <header class="header">
-  <a class="logo" href="akamai-cost-calculator.html">
+  <a class="logo" href="index.html">
     <div class="logo-mark">⚡</div>
     <span>Akamai Cloud</span>
   </a>
@@ -461,7 +464,7 @@
   <span class="header-subtitle">Documentation</span>
   <div class="header-right">
     <span class="header-badge">v1.0 · Early 2026</span>
-    <a class="open-calc-btn" href="akamai-cost-calculator.html">Open Calculator →</a>
+    <a class="open-calc-btn" href="index.html">Open Calculator →</a>
   </div>
 </header>
 
@@ -582,16 +585,16 @@
 <span class="dim">│</span>  │ Plan name│  │ Plan name│  │ Plan name│      <span class="dim">│</span>  Item 3   <span class="dim">│</span>
 <span class="dim">│</span>  │ Specs    │  │ Specs    │  │ Specs    │      <span class="dim">│</span>  ───────  <span class="dim">│</span>
 <span class="dim">│</span>  │ $xx/mo   │  │ $xx/mo   │  │ $xx/mo   │      <span class="dim">│</span>  <span class="hi">$xxx/mo</span>  <span class="dim">│</span>
-<span class="dim">│</span>  │ [-][n][+]│  │ [-][n][+]│  │ [-][n][+]│      <span class="dim">│</span>           <span class="dim">│</span>
-<span class="dim">│</span>  │ [Add]    │  │ [Add]    │  │ [Add]    │      <span class="dim">│</span>  [Clear]  <span class="dim">│</span>
-<span class="dim">│</span>  └──────────┘  └──────────┘  └──────────┘      <span class="dim">│</span>  [Copy]   <span class="dim">│</span>
+<span class="dim">│</span>  │ [−][0][+]│  │ [−][0][+]│  │ [−][0][+]│      <span class="dim">│</span>           <span class="dim">│</span>
+<span class="dim">│</span>  └──────────┘  └──────────┘  └──────────┘      <span class="dim">│</span>  [Clear]  <span class="dim">│</span>
+<span class="dim">│</span>                                                  <span class="dim">│</span>  [Copy]   <span class="dim">│</span>
 <span class="dim">└──────────────────────────────────────────────────┴───────────┘</span>
       </div>
 
       <div class="kv-grid">
         <div class="kv-row"><div class="kv-key">Header</div><div class="kv-val">Sticky top bar with the Akamai branding and the Monthly / Hourly billing toggle. The selected mode affects all price displays across the entire page.</div></div>
         <div class="kv-row"><div class="kv-key">Tab bar</div><div class="kv-val">Switches between the 6 compute categories. Horizontal scrolling is supported on smaller screens. The active tab is highlighted in Akamai blue.</div></div>
-        <div class="kv-row"><div class="kv-key">Plan cards</div><div class="kv-val">Responsive grid of plan cards. Each shows specs (RAM, CPU, Storage, Transfer), price, and a quantity selector. Cards with a blue border + tinted background are currently in your estimate.</div></div>
+        <div class="kv-row"><div class="kv-key">Plan cards</div><div class="kv-val">Responsive grid of plan cards. Each shows specs (RAM, CPU, Storage, Transfer), price, and a quantity selector (defaults to 0). Pressing <strong>+</strong> immediately adds the plan to your estimate; the count turns blue and the card border highlights. Pressing <strong>−</strong> back to 0 removes it automatically.</div></div>
         <div class="kv-row"><div class="kv-key">Estimate sidebar</div><div class="kv-val">Sticky right panel showing all added items, per-item cost, running total, and action buttons. On screens narrower than 1024 px, the sidebar docks to the bottom of the viewport.</div></div>
       </div>
     </section>
@@ -609,7 +612,7 @@
             <div class="step-num">1</div>
             <div>
               <div class="step-title">Open the calculator</div>
-              <div class="step-desc">Open <code>akamai-cost-calculator.html</code> in any modern browser. No internet connection or server is needed — everything runs locally.</div>
+              <div class="step-desc">Open <code>index.html</code> in any modern browser. No internet connection or server is required — all pricing data and logic is self-contained in the file.</div>
             </div>
           </div>
           <div class="step">
@@ -622,8 +625,8 @@
           <div class="step">
             <div class="step-num">3</div>
             <div>
-              <div class="step-title">Set quantity and add</div>
-              <div class="step-desc">Use the <strong>−</strong> / <strong>+</strong> buttons on a plan card to set how many instances you need, then click <strong>Add to Estimate</strong>. The card turns blue and the item appears in the sidebar.</div>
+              <div class="step-title">Set quantity — estimate updates instantly</div>
+              <div class="step-desc">Use the <strong>−</strong> / <strong>+</strong> buttons on a plan card to set how many instances you need. The estimate sidebar updates in real time with every press — no "Add to Estimate" button required. The count turns blue and the card gets a blue border while it is in your estimate. Decrement back to <strong>0</strong> to remove it.</div>
             </div>
           </div>
           <div class="step">
@@ -858,7 +861,8 @@
         </div>
       </div>
 
-      <p>Click <strong>Add to Estimate</strong> in the LKE cluster summary bar to add the entire configured cluster as a single line item in your estimate sidebar. You can add multiple clusters with different configurations.</p>
+      <p>Click <strong>+ Add to Estimate</strong> in the LKE cluster summary bar to add the entire configured cluster as a single line item in your estimate sidebar. You can add multiple clusters with different configurations by adjusting the control plane tier and node pools between each click.</p>
+      <p style="margin-top:10px">Once added, clusters appear in an <strong>✅ In Your Estimate</strong> block at the top of the LKE tab — each entry shows the cluster name, its node pool summary, the monthly cost, and a <strong>✕ Remove</strong> button. You can also remove a cluster via the <strong>✕</strong> in the estimate sidebar.</p>
 
       <h3 class="subsection">Available Node Types in LKE</h3>
       <p>Node pools support Shared CPU, Dedicated CPU, and High Memory instance types. GPU nodes are not available in LKE node pools via this calculator. Available node options span from the <strong>Nanode 1GB ($5/mo)</strong> up to the <strong>Linode 192GB ($1,152/mo)</strong> on the Shared side, and <strong>Dedicated 256GB ($2,304/mo)</strong> on the Dedicated side.</p>
@@ -896,10 +900,15 @@
       <div class="section-subtitle">Managing items in the sidebar and copying your estimate</div>
 
       <h3 class="subsection">Adding items</h3>
-      <p>Set the desired quantity on a plan card using the <strong>−</strong> / <strong>+</strong> buttons, then click <strong>Add to Estimate</strong>. The card visually indicates it has been added (blue border, tinted background). The quantity on the card can be adjusted at any time — changes update the cart total instantly.</p>
+      <p>Press <strong>+</strong> on any plan card — the estimate sidebar updates immediately. There is no separate "Add to Estimate" button. The quantity counter turns <strong style="color:#009BDE">blue</strong> and the card gains a blue border while it is active in your estimate. Every subsequent <strong>+</strong> or <strong>−</strong> press adjusts both the on-card counter and the sidebar total in real time.</p>
 
       <h3 class="subsection">Removing items</h3>
-      <p>Click the <strong>✕</strong> button next to any line item in the sidebar, or click the plan card's <strong>✓ In Estimate</strong> button to remove it.</p>
+      <p>There are three ways to remove a plan from the estimate:</p>
+      <ul style="margin: 8px 0 0 20px; line-height: 2;">
+        <li>Press <strong>−</strong> on the plan card until the quantity reaches <strong>0</strong> — it is removed automatically.</li>
+        <li>Click the <strong>✕</strong> button next to any line item in the estimate sidebar — this zeroes and removes it instantly.</li>
+        <li>For <strong>LKE clusters</strong>, use the <strong>✕</strong> button in the <em>In Your Estimate</em> block at the top of the Kubernetes tab, or the <strong>✕</strong> in the sidebar.</li>
+      </ul>
 
       <h3 class="subsection">Clearing all items</h3>
       <p>The <strong>Clear</strong> button in the sidebar footer removes all items from the estimate at once.</p>
