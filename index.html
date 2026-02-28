@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akamai Cloud Compute Cost Calculator</title>
+  <style>
+    :root {
+      --primary: #009BDE;
+      --primary-dark: #007ab5;
+      --primary-light: #e6f5fd;
+      --dark: #0d1b2a;
+      --surface: #ffffff;
+      --bg: #f0f4f8;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+      --shadow-hover: 0 8px 30px rgba(0,155,222,.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--dark);
+      color: white;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: -.3px;
+    }
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #009BDE, #00c8ff);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .header-sep { width: 1px; height: 28px; background: #1e3a5f; }
+    .header-subtitle { font-size: 13px; color: #7aa4c8; font-weight: 500; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .header-note { font-size: 12px; color: #5a8ab0; }
+
+    .billing-toggle {
+      display: flex;
+      background: #1a2d42;
+      border-radius: 9px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .billing-toggle button {
+      background: none;
+      border: none;
+      color: #7aa4c8;
+      padding: 5px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .billing-toggle button.active { background: var(--primary); color: white; }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      min-height: calc(100vh - 60px);
+      align-items: start;
+    }
+    .main { padding: 24px; overflow: visible; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: white;
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover { background: var(--bg); color: var(--text); }
+    .tab-btn.active { background: var(--primary); color: white; }
+
+    /* ── Section header ── */
+    .section-hd { margin-bottom: 20px; }
+    .section-hd h2 { font-size: 18px; font-weight: 800; margin-bottom: 3px; }
+    .section-hd p { font-size: 13px; color: var(--text-muted); }
+
+    /* ── Plan grid ── */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Plan card ── */
+    .plan-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      border: 2px solid transparent;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+      cursor: default;
+    }
+    .plan-card:hover { border-color: var(--primary); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .plan-card.in-cart { border-color: var(--primary); background: var(--primary-light); }
+
+    .plan-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .plan-name { font-weight: 800; font-size: 15px; }
+    .plan-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    .badge-shared  { background: #dbeafe; color: #1d4ed8; }
+    .badge-dedicated { background: #dcfce7; color: #166534; }
+    .badge-premium { background: #fef3c7; color: #854d0e; }
+    .badge-highmem { background: #f3e8ff; color: #7c3aed; }
+    .badge-gpu     { background: #1a1f2e; color: #60a5fa; }
+    .badge-lke     { background: #cffafe; color: #155e75; }
+    .badge-limited { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .badge-new     { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+    /* GPU hero block */
+    .gpu-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .gpu-hero-model { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .08em; }
+    .gpu-hero-count { font-size: 28px; font-weight: 900; color: white; line-height: 1.1; margin: 2px 0; }
+    .gpu-hero-vram { font-size: 12px; color: #94a3b8; }
+
+    /* Specs */
+    .specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .spec {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spec-ico {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .spec-val { font-weight: 700; font-size: 13px; display: block; line-height: 1.2; }
+    .spec-lbl { font-size: 11px; color: var(--text-muted); }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* Price row */
+    .price-row { display: flex; justify-content: space-between; align-items: flex-end; }
+    .price-main { font-size: 26px; font-weight: 900; color: var(--text); line-height: 1; }
+    .price-period { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-left: 2px; }
+    .price-alt { font-size: 12px; color: var(--text-muted); text-align: right; }
+
+    /* Actions */
+    .card-actions { display: flex; gap: 8px; align-items: center; }
+    .qty-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,.08);
+      transition: all .15s;
+    }
+    .qty-btn:hover { background: var(--primary); color: white; }
+    .qty-num { min-width: 26px; text-align: center; font-weight: 700; font-size: 14px; }
+    .action-btn {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-add { background: var(--primary); color: white; }
+    .btn-add:hover { background: var(--primary-dark); }
+    .btn-remove { background: var(--danger); color: white; }
+    .btn-remove:hover { background: #dc2626; }
+
+    /* ── LKE section ── */
+    .lke-stack { display: flex; flex-direction: column; gap: 16px; }
+    .lke-block {
+      background: white;
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .lke-block-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .cp-option {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .cp-option:hover { border-color: var(--primary); }
+    .cp-option.sel { border-color: var(--primary); background: var(--primary-light); }
+    .cp-name { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+    .cp-price { font-size: 18px; font-weight: 900; color: var(--primary); }
+    .cp-desc { font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+
+    .pool-list { display: flex; flex-direction: column; gap: 10px; }
+    .pool-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--bg);
+    }
+    .pool-select {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: white;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .pool-cost { font-weight: 700; font-size: 13px; min-width: 72px; text-align: right; color: var(--primary); }
+    .pool-rm {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 5px;
+      line-height: 1;
+    }
+    .pool-rm:hover { background: #fee2e2; color: var(--danger); }
+    .add-pool-btn {
+      width: 100%;
+      margin-top: 10px;
+      border: 2px dashed var(--border);
+      background: none;
+      border-radius: 9px;
+      padding: 11px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .add-pool-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .lke-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px;
+      background: var(--bg);
+      border-radius: 10px;
+    }
+    .lke-total-label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+    .lke-total-price { font-size: 26px; font-weight: 900; color: var(--primary); }
+    .lke-total-breakdown { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .btn-add-cluster {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 9px;
+      padding: 11px 22px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-add-cluster:hover { background: var(--primary-dark); }
+
+    /* ── Cart / Sidebar ── */
+    .sidebar {
+      background: white;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 60px);
+      position: sticky;
+      top: 60px;
+      overflow: hidden;
+    }
+    .cart-hd {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cart-hd-title { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .cart-badge {
+      background: var(--primary);
+      color: white;
+      border-radius: 20px;
+      padding: 1px 9px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .cart-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .cart-empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+    .cart-empty-ico { font-size: 44px; margin-bottom: 12px; }
+    .cart-empty-title { font-weight: 700; margin-bottom: 5px; }
+    .cart-empty-desc { font-size: 12px; line-height: 1.5; }
+
+    .cart-item {
+      display: flex;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .ci-info { flex: 1; min-width: 0; }
+    .ci-name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ci-specs { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .ci-price { text-align: right; white-space: nowrap; }
+    .ci-total { font-weight: 800; font-size: 14px; }
+    .ci-each { font-size: 11px; color: var(--text-muted); }
+    .ci-rm {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .ci-rm:hover { background: #fee2e2; color: var(--danger); }
+
+    .cart-ft { border-top: 2px solid var(--border); padding: 18px 20px; }
+    .total-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .total-label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+    .total-amount { font-size: 32px; font-weight: 900; line-height: 1; }
+    .total-period { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+    .total-hourly { font-size: 12px; color: var(--text-muted); text-align: right; margin-bottom: 14px; }
+    .overage-note { font-size: 11px; color: var(--text-muted); background: var(--bg); border-radius: 7px; padding: 7px 10px; margin-bottom: 14px; line-height: 1.5; }
+    .cart-btns { display: flex; gap: 8px; }
+    .btn-outline {
+      flex: 1;
+      background: none;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: all .15s;
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-copy {
+      flex: 2;
+      background: var(--primary);
+      border: none;
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-copy:hover { background: var(--primary-dark); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--dark);
+      color: white;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Scrollbar styling ── */
+    .cart-body::-webkit-scrollbar { width: 4px; }
+    .cart-body::-webkit-scrollbar-track { background: transparent; }
+    .cart-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        height: auto; max-height: 55vh;
+        border-left: none; border-top: 2px solid var(--border);
+        z-index: 100;
+      }
+      .cart-body { max-height: 180px; }
+      .main { padding-bottom: 320px; }
+    }
+    @media (max-width: 640px) {
+      .cp-grid { grid-template-columns: 1fr; }
+      .plans-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">⚡</div>
+    <span>Akamai Cloud</span>
+  </div>
+  <div class="header-sep"></div>
+  <span class="header-subtitle">Compute Cost Calculator</span>
+  <div class="header-right">
+    <span class="header-note">Prices as of early 2026</span>
+    <div class="billing-toggle">
+      <button id="btnMonthly" class="active" onclick="setBilling('monthly')">Monthly</button>
+      <button id="btnHourly" onclick="setBilling('hourly')">Hourly</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="main">
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="shared"   onclick="setTab(this,'shared')">🖥️ Shared CPU</button>
+      <button class="tab-btn"        data-tab="dedicated" onclick="setTab(this,'dedicated')">⚡ Dedicated CPU</button>
+      <button class="tab-btn"        data-tab="premium"   onclick="setTab(this,'premium')">💎 Premium CPU</button>
+      <button class="tab-btn"        data-tab="highmem"   onclick="setTab(this,'highmem')">🧠 High Memory</button>
+      <button class="tab-btn"        data-tab="gpu"       onclick="setTab(this,'gpu')">🎮 GPU Compute</button>
+      <button class="tab-btn"        data-tab="lke"       onclick="setTab(this,'lke')">☸️ Kubernetes (LKE)</button>
+    </div>
+    <div id="plan-content"></div>
+  </main>
+
+  <aside class="sidebar">
+    <div class="cart-hd">
+      <div class="cart-hd-title">
+        Your Estimate
+        <span class="cart-badge" id="cartCount">0</span>
+      </div>
+    </div>
+    <div class="cart-body" id="cartBody">
+      <div class="cart-empty">
+        <div class="cart-empty-ico">🛒</div>
+        <div class="cart-empty-title">No items yet</div>
+        <div class="cart-empty-desc">Select a plan and click<br>"Add to Estimate" to get started.</div>
+      </div>
+    </div>
+    <div class="cart-ft" id="cartFt" style="display:none">
+      <div class="total-row">
+        <div>
+          <div class="total-label">Estimated Monthly Total</div>
+          <div><span class="total-amount" id="totalAmt">$0</span><span class="total-period">/mo</span></div>
+        </div>
+      </div>
+      <div class="total-hourly" id="totalHourly"></div>
+      <div class="overage-note">
+        ℹ️ Outbound transfer overages billed at <strong>$0.005/GB</strong>. Inbound traffic is always free. Usage rounds up to nearest hour.
+      </div>
+      <div class="cart-btns">
+        <button class="btn-outline" onclick="clearCart()">Clear</button>
+        <button class="btn-copy"    onclick="copyEstimate()">📋 Copy Estimate</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  PRICING DATA  (sourced from Linode API & akamai.com/cloud/pricing)
+// ═══════════════════════════════════════
+const PLANS = {
+  shared: [
+    { id:'nanode-1',      name:'Nanode 1GB',    ram:1,   cpu:1,  storage:25,   transfer:1,  monthly:5,    hourly:0.0075 },
+    { id:'std-2gb',       name:'Linode 2GB',    ram:2,   cpu:1,  storage:50,   transfer:2,  monthly:12,   hourly:0.018  },
+    { id:'std-4gb',       name:'Linode 4GB',    ram:4,   cpu:2,  storage:80,   transfer:4,  monthly:24,   hourly:0.036  },
+    { id:'std-8gb',       name:'Linode 8GB',    ram:8,   cpu:4,  storage:160,  transfer:5,  monthly:48,   hourly:0.072  },
+    { id:'std-16gb',      name:'Linode 16GB',   ram:16,  cpu:6,  storage:320,  transfer:8,  monthly:96,   hourly:0.144  },
+    { id:'std-32gb',      name:'Linode 32GB',   ram:32,  cpu:8,  storage:640,  transfer:16, monthly:192,  hourly:0.288  },
+    { id:'std-64gb',      name:'Linode 64GB',   ram:64,  cpu:16, storage:1280, transfer:20, monthly:384,  hourly:0.576  },
+    { id:'std-96gb',      name:'Linode 96GB',   ram:96,  cpu:20, storage:1920, transfer:20, monthly:576,  hourly:0.864  },
+    { id:'std-128gb',     name:'Linode 128GB',  ram:128, cpu:24, storage:2560, transfer:20, monthly:768,  hourly:1.152  },
+    { id:'std-192gb',     name:'Linode 192GB',  ram:192, cpu:32, storage:3840, transfer:20, monthly:1152, hourly:1.728  },
+  ],
+  dedicated: [
+    { id:'ded-4gb',   name:'Dedicated 4GB',   ram:4,   cpu:2,  storage:80,   transfer:4,  monthly:36,   hourly:0.054  },
+    { id:'ded-8gb',   name:'Dedicated 8GB',   ram:8,   cpu:4,  storage:160,  transfer:5,  monthly:72,   hourly:0.108  },
+    { id:'ded-16gb',  name:'Dedicated 16GB',  ram:16,  cpu:8,  storage:320,  transfer:6,  monthly:144,  hourly:0.216  },
+    { id:'ded-32gb',  name:'Dedicated 32GB',  ram:32,  cpu:16, storage:640,  transfer:7,  monthly:288,  hourly:0.432  },
+    { id:'ded-64gb',  name:'Dedicated 64GB',  ram:64,  cpu:32, storage:1280, transfer:8,  monthly:576,  hourly:0.864  },
+    { id:'ded-96gb',  name:'Dedicated 96GB',  ram:96,  cpu:48, storage:1920, transfer:9,  monthly:864,  hourly:1.296  },
+    { id:'ded-128gb', name:'Dedicated 128GB', ram:128, cpu:50, storage:2500, transfer:10, monthly:1152, hourly:1.728  },
+    { id:'ded-256gb', name:'Dedicated 256GB', ram:256, cpu:56, storage:5000, transfer:11, monthly:2304, hourly:3.456  },
+  ],
+  premium: [
+    { id:'prm-4gb',   name:'Premium 4GB',   ram:4,   cpu:2,  storage:80,   transfer:4,  monthly:43,   hourly:0.0645  },
+    { id:'prm-8gb',   name:'Premium 8GB',   ram:8,   cpu:4,  storage:160,  transfer:5,  monthly:86,   hourly:0.129   },
+    { id:'prm-16gb',  name:'Premium 16GB',  ram:16,  cpu:8,  storage:320,  transfer:6,  monthly:173,  hourly:0.2595  },
+    { id:'prm-32gb',  name:'Premium 32GB',  ram:32,  cpu:16, storage:640,  transfer:7,  monthly:346,  hourly:0.519   },
+    { id:'prm-64gb',  name:'Premium 64GB',  ram:64,  cpu:32, storage:1280, transfer:8,  monthly:691,  hourly:1.0365  },
+    { id:'prm-96gb',  name:'Premium 96GB',  ram:96,  cpu:48, storage:1920, transfer:9,  monthly:1037, hourly:1.5555  },
+    { id:'prm-128gb', name:'Premium 128GB', ram:128, cpu:50, storage:2500, transfer:10, monthly:1382, hourly:2.073   },
+    { id:'prm-256gb', name:'Premium 256GB', ram:256, cpu:56, storage:5000, transfer:11, monthly:2765, hourly:4.1475  },
+  ],
+  highmem: [
+    { id:'hm-24gb',  name:'Linode 24GB',  ram:24,  cpu:2,  storage:20,  transfer:5, monthly:60,  hourly:0.09  },
+    { id:'hm-48gb',  name:'Linode 48GB',  ram:48,  cpu:2,  storage:40,  transfer:6, monthly:120, hourly:0.18  },
+    { id:'hm-90gb',  name:'Linode 90GB',  ram:90,  cpu:4,  storage:90,  transfer:7, monthly:240, hourly:0.36  },
+    { id:'hm-150gb', name:'Linode 150GB', ram:150, cpu:8,  storage:200, transfer:8, monthly:480, hourly:0.72  },
+    { id:'hm-300gb', name:'Linode 300GB', ram:300, cpu:16, storage:340, transfer:9, monthly:960, hourly:1.44  },
+  ],
+  gpu: [
+    // NVIDIA RTX 4000 Ada Generation
+    { id:'a4k-1x', name:'RTX 4000 Ada — 1× GPU', gpuModel:'NVIDIA RTX 4000 Ada', gpuCount:1, vram:20,  ram:16,  cpu:4,  storage:512,  transfer:5, monthly:350,  hourly:0.52  },
+    { id:'a4k-2x', name:'RTX 4000 Ada — 2× GPU', gpuModel:'NVIDIA RTX 4000 Ada', gpuCount:2, vram:40,  ram:48,  cpu:16, storage:1024, transfer:6, monthly:700,  hourly:1.04  },
+    { id:'a4k-4x', name:'RTX 4000 Ada — 4× GPU', gpuModel:'NVIDIA RTX 4000 Ada', gpuCount:4, vram:80,  ram:96,  cpu:32, storage:2048, transfer:7, monthly:2388, hourly:3.57  },
+    // NVIDIA Quadro RTX 6000
+    { id:'q6k-1x', name:'Quadro RTX 6000 — 1× GPU', gpuModel:'NVIDIA Quadro RTX 6000', gpuCount:1, vram:24, ram:32,  cpu:8,  storage:640,  transfer:5, monthly:1000, hourly:1.50, limited:true },
+    { id:'q6k-2x', name:'Quadro RTX 6000 — 2× GPU', gpuModel:'NVIDIA Quadro RTX 6000', gpuCount:2, vram:48, ram:64,  cpu:16, storage:1280, transfer:6, monthly:2000, hourly:3.00, limited:true },
+    { id:'q6k-4x', name:'Quadro RTX 6000 — 4× GPU', gpuModel:'NVIDIA Quadro RTX 6000', gpuCount:4, vram:96, ram:128, cpu:24, storage:2560, transfer:7, monthly:4000, hourly:6.00, limited:true },
+    // NVIDIA RTX PRO 6000 Blackwell (newest)
+    { id:'bb-1x',  name:'RTX PRO 6000 Blackwell — 1× GPU', gpuModel:'NVIDIA RTX PRO 6000 Blackwell', gpuCount:1, vram:96,  ram:176, cpu:16, storage:1024, transfer:5, monthly:1665, hourly:2.50,  limited:true, isNew:true },
+    { id:'bb-2x',  name:'RTX PRO 6000 Blackwell — 2× GPU', gpuModel:'NVIDIA RTX PRO 6000 Blackwell', gpuCount:2, vram:192, ram:352, cpu:32, storage:2048, transfer:6, monthly:3330, hourly:5.00,  limited:true, isNew:true },
+    { id:'bb-4x',  name:'RTX PRO 6000 Blackwell — 4× GPU', gpuModel:'NVIDIA RTX PRO 6000 Blackwell', gpuCount:4, vram:384, ram:704, cpu:64, storage:4096, transfer:7, monthly:6660, hourly:10.00, limited:true, isNew:true },
+  ],
+};
+
+// LKE control plane tiers
+const CP_OPTIONS = [
+  { id:'standard',   name:'Standard',       price:0,   desc:'Shared control plane. Free with any node pool.' },
+  { id:'ha',         name:'High Availability', price:60,  desc:'Redundant control plane for production clusters.' },
+  { id:'enterprise', name:'LKE Enterprise', price:300, desc:'Dedicated control plane + enterprise support.' },
+];
+
+// Flatten all non-GPU plans for LKE node pool selector
+const NODE_PLANS = [
+  ...PLANS.shared.map(p => ({...p, cat:'Shared'})),
+  ...PLANS.dedicated.map(p => ({...p, cat:'Dedicated'})),
+  ...PLANS.highmem.map(p => ({...p, cat:'High Memory'})),
+];
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let billing    = 'monthly';
+let activeTab  = 'shared';
+let cart       = {};   // id → { plan, qty, type }
+let lke = {
+  cp: 'standard',
+  pools: [],  // [{ planId, nodes }]
+};
+
+// ═══════════════════════════════════════
+//  FORMATTERS
+// ═══════════════════════════════════════
+function fmtGB(gb) { return gb >= 1000 ? `${(gb/1000).toFixed(1)} TB` : `${gb} GB`; }
+function fmtPrice(p) {
+  return billing === 'hourly'
+    ? { main: `$${p.hourly.toFixed(4)}`, period: '/hr', alt: `$${p.monthly.toFixed(0)}/mo` }
+    : { main: `$${p.monthly.toFixed(0)}`, period: '/mo', alt: `$${p.hourly.toFixed(4)}/hr` };
+}
+
+// ═══════════════════════════════════════
+//  RENDER — Plan card
+// ═══════════════════════════════════════
+const BADGE_CLASS = { shared:'badge-shared', dedicated:'badge-dedicated', premium:'badge-premium', highmem:'badge-highmem', gpu:'badge-gpu', lke:'badge-lke' };
+const BADGE_LABEL = { shared:'Shared CPU', dedicated:'Dedicated CPU', premium:'Premium CPU', highmem:'High Memory', gpu:'GPU', lke:'LKE' };
+const SECTION_INFO = {
+  shared:    { title:'Shared CPU',     desc:'Cost-effective compute with shared vCPU cores. Great for dev, staging, and low-to-medium traffic apps.' },
+  dedicated: { title:'Dedicated CPU',  desc:'Reserved physical CPU cores — zero contention. Ideal for compute-intensive production workloads.' },
+  premium:   { title:'Premium CPU',    desc:'5th Gen AMD EPYC™ dedicated cores with guaranteed minimum performance. Enterprise-grade, latency-sensitive workloads.' },
+  highmem:   { title:'High Memory',    desc:'Large RAM with dedicated CPUs — optimized for in-memory databases, caching layers, and analytics engines.' },
+  gpu:       { title:'GPU Compute',    desc:'NVIDIA GPU-accelerated instances for AI/ML training, inference, rendering, and large-scale parallel processing.' },
+};
+
+function cardHTML(plan, type) {
+  const inCart = !!(cart[plan.id] && cart[plan.id].qty > 0);
+  const qty    = inCart ? cart[plan.id].qty : 1;
+  const pr     = fmtPrice(plan);
+  const isGPU  = !!plan.gpuModel;
+
+  const gpuBlock = isGPU ? `
+    <div class="gpu-hero">
+      <div class="gpu-hero-model">${plan.gpuModel}</div>
+      <div class="gpu-hero-count">${plan.gpuCount}× GPU</div>
+      <div class="gpu-hero-vram">${plan.vram} GB VRAM total</div>
+    </div>` : '';
+
+  const tags = `
+    <div class="plan-tags">
+      <span class="badge ${BADGE_CLASS[type]}">${BADGE_LABEL[type]}</span>
+      ${plan.isNew     ? '<span class="badge badge-new">New</span>'     : ''}
+      ${plan.limited   ? '<span class="badge badge-limited">Limited</span>' : ''}
+    </div>`;
+
+  const specRow = (ico, val, lbl) => `
+    <div class="spec">
+      <div class="spec-ico">${ico}</div>
+      <div><span class="spec-val">${val}</span><span class="spec-lbl">${lbl}</span></div>
+    </div>`;
+
+  const specs = `
+    <div class="specs">
+      ${isGPU
+        ? specRow('🧠', `${plan.ram} GB`,     'System RAM')
+           + specRow('⚙️', `${plan.cpu} vCPU`, 'CPU Cores')
+           + specRow('💾', fmtGB(plan.storage),'NVMe Storage')
+           + specRow('🌐', `${plan.transfer} TB`,'Transfer')
+        : specRow('🧠', `${plan.ram} GB`,       'RAM')
+           + specRow('⚙️', `${plan.cpu} vCPU${plan.cpu>1?'s':''}`, type==='shared'?'Shared CPU':'Dedicated CPU')
+           + specRow('💾', fmtGB(plan.storage),'SSD Storage')
+           + specRow('🌐', `${plan.transfer} TB`,'Transfer')
+      }
+    </div>`;
+
+  const actionBtn = inCart
+    ? `<button class="action-btn btn-remove" onclick="removeFromCart('${plan.id}')">✓ In Estimate</button>`
+    : `<button class="action-btn btn-add"    onclick="addToCart('${plan.id}','${type}')">Add to Estimate</button>`;
+
+  return `
+    <div class="plan-card ${inCart?'in-cart':''}" id="card-${plan.id}">
+      <div class="plan-top">
+        <div class="plan-name">${plan.name}</div>
+        ${tags}
+      </div>
+      ${gpuBlock}
+      ${specs}
+      <hr class="divider">
+      <div class="price-row">
+        <div>
+          <span class="price-main">${pr.main}</span><span class="price-period">${pr.period}</span>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${pr.alt}</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <div class="qty-wrap">
+          <button class="qty-btn" onclick="adjustQty('${plan.id}','${type}',-1)">−</button>
+          <span class="qty-num" id="qty-${plan.id}">${qty}</span>
+          <button class="qty-btn" onclick="adjustQty('${plan.id}','${type}', 1)">+</button>
+        </div>
+        ${actionBtn}
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+//  RENDER — Standard section
+// ═══════════════════════════════════════
+function renderStdSection(type) {
+  const info = SECTION_INFO[type];
+  const cards = PLANS[type].map(p => cardHTML(p, type)).join('');
+  return `
+    <div class="section-hd">
+      <h2>${info.title}</h2>
+      <p>${info.desc}</p>
+    </div>
+    <div class="plans-grid">${cards}</div>`;
+}
+
+// ═══════════════════════════════════════
+//  RENDER — LKE section
+// ═══════════════════════════════════════
+function renderLKE() {
+  const cpHTML = CP_OPTIONS.map(o => `
+    <div class="cp-option ${lke.cp===o.id?'sel':''}" onclick="setCP('${o.id}')">
+      <div class="cp-name">${o.name}</div>
+      <div class="cp-price">${o.price===0?'Free':'+$'+o.price+'/mo'}</div>
+      <div class="cp-desc">${o.desc}</div>
+    </div>`).join('');
+
+  const selectOpts = NODE_PLANS.map(p =>
+    `<option value="${p.id}">[${p.cat}] ${p.name} — $${p.monthly}/mo</option>`
+  ).join('');
+
+  const poolsHTML = lke.pools.map((pool,i) => {
+    const plan = NODE_PLANS.find(p => p.id === pool.planId) || NODE_PLANS[0];
+    const cost = plan.monthly * pool.nodes;
+    const opts = NODE_PLANS.map(p =>
+      `<option value="${p.id}" ${p.id===pool.planId?'selected':''}>[${p.cat}] ${p.name} — $${p.monthly}/mo</option>`
+    ).join('');
+    return `
+      <div class="pool-row">
+        <select class="pool-select" onchange="updatePool(${i},'plan',this.value)">${opts}</select>
+        <div class="qty-wrap">
+          <button class="qty-btn" onclick="updatePool(${i},'nodes',${Math.max(1,pool.nodes-1)})">−</button>
+          <span class="qty-num" style="min-width:24px">${pool.nodes}</span>
+          <button class="qty-btn" onclick="updatePool(${i},'nodes',${pool.nodes+1})">+</button>
+        </div>
+        <div class="pool-cost">$${cost.toFixed(0)}/mo</div>
+        <button class="pool-rm" onclick="removePool(${i})" title="Remove pool">✕</button>
+      </div>`;
+  }).join('');
+
+  const cpCost   = CP_OPTIONS.find(o => o.id===lke.cp)?.price || 0;
+  const nodeCost = lke.pools.reduce((s, pool) => {
+    const p = NODE_PLANS.find(x => x.id===pool.planId) || NODE_PLANS[0];
+    return s + p.monthly * pool.nodes;
+  }, 0);
+  const total = cpCost + nodeCost;
+
+  return `
+    <div class="section-hd">
+      <h2>Linode Kubernetes Engine (LKE)</h2>
+      <p>Managed Kubernetes with an automated control plane. Pay only for the worker nodes you provision.</p>
+    </div>
+    <div class="lke-stack">
+      <div class="lke-block">
+        <div class="lke-block-title">🎛️ Control Plane Tier</div>
+        <div class="cp-grid">${cpHTML}</div>
+      </div>
+      <div class="lke-block">
+        <div class="lke-block-title">🖥️ Node Pools</div>
+        <div class="pool-list" id="poolList">
+          ${lke.pools.length ? poolsHTML : '<div style="font-size:13px;color:var(--text-muted);padding:4px 0">No node pools yet. Add a pool below.</div>'}
+        </div>
+        <button class="add-pool-btn" onclick="addPool()">+ Add Node Pool</button>
+      </div>
+      <div class="lke-block">
+        <div class="lke-summary-bar">
+          <div>
+            <div class="lke-total-label">Estimated Cluster Cost</div>
+            <div class="lke-total-price">$${total.toFixed(0)}/mo</div>
+            <div class="lke-total-breakdown">
+              Control plane: $${cpCost}/mo &nbsp;·&nbsp; Nodes: $${nodeCost.toFixed(0)}/mo
+            </div>
+          </div>
+          <button class="btn-add-cluster" onclick="addLKEToCart()">Add to Estimate</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════
+function setTab(btn, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeTab = tab;
+  renderContent();
+}
+
+function renderContent() {
+  const el = document.getElementById('plan-content');
+  el.innerHTML = activeTab === 'lke' ? renderLKE() : renderStdSection(activeTab);
+}
+
+// ═══════════════════════════════════════
+//  BILLING TOGGLE
+// ═══════════════════════════════════════
+function setBilling(mode) {
+  billing = mode;
+  document.getElementById('btnMonthly').classList.toggle('active', mode==='monthly');
+  document.getElementById('btnHourly').classList.toggle('active', mode==='hourly');
+  renderContent();
+  renderCart();
+}
+
+// ═══════════════════════════════════════
+//  QUANTITY
+// ═══════════════════════════════════════
+function adjustQty(id, type, delta) {
+  const el = document.getElementById(`qty-${id}`);
+  if (!el) return;
+  let v = Math.max(1, parseInt(el.textContent||'1') + delta);
+  el.textContent = v;
+  if (cart[id]) { cart[id].qty = v; renderCart(); }
+}
+
+// ═══════════════════════════════════════
+//  CART
+// ═══════════════════════════════════════
+function addToCart(id, type) {
+  const plan = PLANS[type].find(p => p.id === id);
+  if (!plan) return;
+  const qty = parseInt(document.getElementById(`qty-${id}`)?.textContent || '1');
+  cart[id] = { plan, qty, type };
+  renderContent();
+  renderCart();
+  toast(`Added ${qty > 1 ? qty + '× ' : ''}${plan.name}`);
+}
+
+function removeFromCart(id) {
+  delete cart[id];
+  renderContent();
+  renderCart();
+}
+
+function clearCart() {
+  cart = {};
+  renderContent();
+  renderCart();
+}
+
+function addLKEToCart() {
+  const cpCost = CP_OPTIONS.find(o => o.id===lke.cp)?.price || 0;
+  const nodeCost = lke.pools.reduce((s, pool) => {
+    const p = NODE_PLANS.find(x => x.id===pool.planId) || NODE_PLANS[0];
+    return s + p.monthly * pool.nodes;
+  }, 0);
+  const total = cpCost + nodeCost;
+  if (total === 0 && lke.pools.length === 0) { toast('Add at least one node pool first'); return; }
+
+  const cpName = CP_OPTIONS.find(o => o.id===lke.cp)?.name || 'Standard';
+  const poolSummary = lke.pools.map(pool => {
+    const p = NODE_PLANS.find(x => x.id===pool.planId) || NODE_PLANS[0];
+    return `${pool.nodes}× ${p.name}`;
+  }).join(', ');
+
+  const key = `lke-${Date.now()}`;
+  cart[key] = {
+    plan: {
+      id: key,
+      name: `LKE Cluster (${cpName})`,
+      ram: 0, cpu: 0, storage: 0,
+      detail: poolSummary || 'Control plane only',
+      monthly: total,
+      hourly: parseFloat((total / 24 / 30).toFixed(4)),
+    },
+    qty: 1,
+    type: 'lke',
+  };
+  renderCart();
+  toast(`LKE cluster added — $${total}/mo`);
+}
+
+function renderCart() {
+  const items  = Object.values(cart);
+  const count  = items.reduce((s,i) => s + i.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+
+  const body = document.getElementById('cartBody');
+  const ft   = document.getElementById('cartFt');
+
+  if (!items.length) {
+    body.innerHTML = `
+      <div class="cart-empty">
+        <div class="cart-empty-ico">🛒</div>
+        <div class="cart-empty-title">No items yet</div>
+        <div class="cart-empty-desc">Select a plan and click<br>"Add to Estimate" to get started.</div>
+      </div>`;
+    ft.style.display = 'none';
+    return;
+  }
+
+  let totalM = 0, totalH = 0;
+  body.innerHTML = items.map(({ plan, qty }) => {
+    const lm = plan.monthly * qty;
+    const lh = plan.hourly  * qty;
+    totalM += lm;
+    totalH += lh;
+    const specs = plan.cpu
+      ? `${plan.cpu} vCPU · ${plan.ram} GB RAM · ${fmtGB(plan.storage)}`
+      : (plan.detail || '');
+    return `
+      <div class="cart-item">
+        <div class="ci-info">
+          <div class="ci-name">${qty > 1 ? qty + '× ' : ''}${plan.name}</div>
+          <div class="ci-specs">${specs}</div>
+        </div>
+        <div class="ci-price">
+          <div class="ci-total">$${lm.toFixed(0)}/mo</div>
+          ${qty > 1 ? `<div class="ci-each">$${plan.monthly}/mo each</div>` : ''}
+        </div>
+        <button class="ci-rm" onclick="removeFromCart('${plan.id}')" title="Remove">✕</button>
+      </div>`;
+  }).join('');
+
+  ft.style.display = 'block';
+  document.getElementById('totalAmt').textContent = `$${totalM.toFixed(0)}`;
+  document.getElementById('totalHourly').textContent = `≈ $${totalH.toFixed(4)}/hr`;
+}
+
+// ═══════════════════════════════════════
+//  LKE STATE HELPERS
+// ═══════════════════════════════════════
+function setCP(id) { lke.cp = id; renderContent(); }
+function addPool()  { lke.pools.push({ planId: NODE_PLANS[0].id, nodes: 3 }); renderContent(); }
+function removePool(i) { lke.pools.splice(i, 1); renderContent(); }
+function updatePool(i, field, val) {
+  if (field === 'plan')  lke.pools[i].planId = val;
+  if (field === 'nodes') lke.pools[i].nodes  = Math.max(1, parseInt(val)||1);
+  renderContent();
+}
+
+// ═══════════════════════════════════════
+//  COPY ESTIMATE
+// ═══════════════════════════════════════
+function copyEstimate() {
+  const items = Object.values(cart);
+  if (!items.length) return;
+  let total = 0;
+  let txt = `Akamai Cloud Compute Estimate\n${'═'.repeat(40)}\n\n`;
+  items.forEach(({ plan, qty }) => {
+    const line = plan.monthly * qty;
+    total += line;
+    txt += `${qty > 1 ? qty + '× ' : ''}${plan.name}\n`;
+    if (plan.cpu) txt += `  ${plan.cpu} vCPU · ${plan.ram} GB RAM · ${fmtGB(plan.storage)} · ${plan.transfer} TB transfer\n`;
+    if (plan.detail) txt += `  ${plan.detail}\n`;
+    txt += `  $${line.toFixed(0)}/mo`;
+    if (qty > 1) txt += ` ($${plan.monthly}/mo × ${qty})`;
+    txt += '\n\n';
+  });
+  txt += `${'═'.repeat(40)}\nTOTAL: $${total.toFixed(0)}/month\n`;
+  txt += `       ≈ $${(total/24/30).toFixed(4)}/hour\n`;
+  txt += `\nPricing sourced from akamai.com/cloud/pricing\n`;
+
+  navigator.clipboard.writeText(txt)
+    .then(() => toast('Estimate copied to clipboard!'))
+    .catch(() => toast('Could not access clipboard'));
+}
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+renderContent();
+</script>
+</body>
+</html>

@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cost Calculator — Documentation</title>
+  <style>
+    :root {
+      --primary:       #009BDE;
+      --primary-dark:  #007ab5;
+      --primary-light: #e6f5fd;
+      --dark:          #0d1b2a;
+      --dark2:         #1a2d42;
+      --bg:            #f0f4f8;
+      --surface:       #ffffff;
+      --border:        #e2e8f0;
+      --text:          #1e293b;
+      --text-muted:    #64748b;
+      --radius:        10px;
+      --shadow:        0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+      --nav-w:         256px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--dark);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; color: white; text-decoration: none; letter-spacing: -.3px; }
+    .logo-mark {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, #009BDE, #00c8ff);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .header-sep { width: 1px; height: 28px; background: #1e3a5f; }
+    .header-subtitle { font-size: 13px; color: #7aa4c8; font-weight: 500; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .header-badge {
+      background: var(--dark2);
+      color: #7aa4c8;
+      border: 1px solid #1e3a5f;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .open-calc-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .open-calc-btn:hover { background: var(--primary-dark); }
+
+    /* ─── Layout ─── */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--nav-w) 1fr;
+      min-height: calc(100vh - 60px);
+      align-items: start;
+    }
+
+    /* ─── Left Nav ─── */
+    .nav {
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 0 40px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .nav::-webkit-scrollbar { width: 4px; }
+    .nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 18px 20px 6px;
+    }
+    .nav-section-label:first-child { padding-top: 0; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all .12s;
+    }
+    .nav-link:hover { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); }
+    .nav-link.active { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); font-weight: 700; }
+    .nav-link-ico { font-size: 14px; flex-shrink: 0; }
+
+    /* ─── Main Content ─── */
+    .content {
+      padding: 40px 48px 80px;
+      max-width: 860px;
+    }
+
+    /* Hero */
+    .doc-hero {
+      background: linear-gradient(135deg, var(--dark) 0%, #1a3a5c 100%);
+      border-radius: 14px;
+      padding: 36px 40px;
+      margin-bottom: 40px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .doc-hero::after {
+      content: '⚡';
+      position: absolute;
+      right: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 80px;
+      opacity: .08;
+    }
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .hero-title { font-size: 26px; font-weight: 900; margin-bottom: 10px; line-height: 1.2; }
+    .hero-desc { font-size: 14px; color: #94a3b8; line-height: 1.6; max-width: 520px; }
+    .hero-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+    .hero-tag {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #cbd5e1;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* Section headings */
+    .doc-section { margin-bottom: 48px; }
+    .doc-section:target .section-title { color: var(--primary); }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 22px;
+      background: var(--primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .section-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    h3.subsection {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 24px 0 10px;
+      color: var(--text);
+    }
+    p { font-size: 14px; color: var(--text); margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    /* Cards / callouts */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    .card-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .card-body  { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .callout-ico { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout-info  { background: var(--primary-light); border-left: 3px solid var(--primary); }
+    .callout-warn  { background: #fffbeb; border-left: 3px solid #f59e0b; }
+    .callout-tip   { background: #f0fdf4; border-left: 3px solid #22c55e; }
+
+    /* Plan type grid */
+    .plan-type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .plan-type-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border-top: 3px solid var(--primary);
+    }
+    .ptc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .ptc-icon { font-size: 20px; }
+    .ptc-name { font-weight: 800; font-size: 14px; }
+    .ptc-range { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; }
+    .ptc-price { font-size: 13px; font-weight: 700; color: var(--primary); }
+    .ptc-use   { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+
+    .ptc-shared   { border-top-color: #3b82f6; }
+    .ptc-dedicated{ border-top-color: #22c55e; }
+    .ptc-premium  { border-top-color: #f59e0b; }
+    .ptc-highmem  { border-top-color: #a855f7; }
+    .ptc-gpu      { border-top-color: #ef4444; }
+    .ptc-lke      { border-top-color: #06b6d4; }
+
+    /* GPU sub-table */
+    .gpu-family {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .gpu-family-hd {
+      background: linear-gradient(90deg, #0f172a, #1e293b);
+      color: white;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gpu-family-name { font-weight: 700; font-size: 13px; }
+    .gpu-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+    .tag-new   { background: #dcfce7; color: #166534; }
+    .tag-lim   { background: #fff7ed; color: #c2410c; }
+    .tag-std   { background: #dbeafe; color: #1d4ed8; }
+
+    /* Data table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .data-table thead { background: var(--dark); color: white; }
+    .data-table th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--bg); }
+    .data-table .price { font-weight: 700; color: var(--primary); }
+    .data-table .muted { color: var(--text-muted); font-size: 12px; }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
+    .step  {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .step-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* UI anatomy diagram */
+    .ui-diagram {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text);
+      overflow-x: auto;
+    }
+    .ui-diagram .hi { color: var(--primary); font-weight: 700; }
+    .ui-diagram .dim { color: var(--text-muted); }
+    .ui-diagram .label { color: #22c55e; }
+
+    /* Inline code */
+    code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      color: var(--primary-dark);
+    }
+
+    /* Key/value pairs */
+    .kv-grid {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 0;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .kv-row { display: contents; }
+    .kv-row > * { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .kv-row:last-child > * { border-bottom: none; }
+    .kv-key { font-weight: 700; background: var(--bg); color: var(--text); }
+    .kv-val { color: var(--text-muted); }
+
+    /* Badges inline */
+    .bdg {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      vertical-align: middle;
+    }
+    .bdg-blue   { background: #dbeafe; color: #1d4ed8; }
+    .bdg-green  { background: #dcfce7; color: #166534; }
+    .bdg-yellow { background: #fef3c7; color: #854d0e; }
+    .bdg-purple { background: #f3e8ff; color: #7c3aed; }
+    .bdg-red    { background: #fee2e2; color: #991b1b; }
+    .bdg-cyan   { background: #cffafe; color: #155e75; }
+    .bdg-lim    { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .bdg-new    { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+    /* LKE control plane table */
+    .lke-cp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .lke-cp-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: var(--surface);
+    }
+    .lke-cp-name  { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+    .lke-cp-price { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 6px; }
+    .lke-cp-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Divider */
+    .rule { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* Footer */
+    .doc-footer {
+      background: var(--dark);
+      color: #64748b;
+      font-size: 12px;
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+    }
+    .doc-footer a { color: var(--primary); text-decoration: none; }
+    .doc-footer a:hover { text-decoration: underline; }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .nav { display: none; }
+      .content { padding: 24px 20px 60px; }
+      .lke-cp-grid { grid-template-columns: 1fr; }
+      .plan-type-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="header">
+  <a class="logo" href="akamai-cost-calculator.html">
+    <div class="logo-mark">⚡</div>
+    <span>Akamai Cloud</span>
+  </a>
+  <div class="header-sep"></div>
+  <span class="header-subtitle">Documentation</span>
+  <div class="header-right">
+    <span class="header-badge">v1.0 · Early 2026</span>
+    <a class="open-calc-btn" href="akamai-cost-calculator.html">Open Calculator →</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ═══════ LEFT NAV ═══════ -->
+  <nav class="nav">
+    <div class="nav-section-label">Getting Started</div>
+    <a class="nav-link active" href="#overview"><span class="nav-link-ico">📖</span>Overview</a>
+    <a class="nav-link" href="#interface"><span class="nav-link-ico">🗺️</span>Interface Layout</a>
+    <a class="nav-link" href="#quickstart"><span class="nav-link-ico">🚀</span>Quick Start</a>
+
+    <div class="nav-section-label">Plan Types</div>
+    <a class="nav-link" href="#shared-cpu"><span class="nav-link-ico">🖥️</span>Shared CPU</a>
+    <a class="nav-link" href="#dedicated-cpu"><span class="nav-link-ico">⚡</span>Dedicated CPU</a>
+    <a class="nav-link" href="#premium-cpu"><span class="nav-link-ico">💎</span>Premium CPU</a>
+    <a class="nav-link" href="#high-memory"><span class="nav-link-ico">🧠</span>High Memory</a>
+    <a class="nav-link" href="#gpu"><span class="nav-link-ico">🎮</span>GPU Compute</a>
+    <a class="nav-link" href="#lke"><span class="nav-link-ico">☸️</span>Kubernetes (LKE)</a>
+
+    <div class="nav-section-label">Reference</div>
+    <a class="nav-link" href="#billing"><span class="nav-link-ico">💳</span>Billing Model</a>
+    <a class="nav-link" href="#estimate"><span class="nav-link-ico">📋</span>Estimate & Export</a>
+    <a class="nav-link" href="#pricing-notes"><span class="nav-link-ico">⚠️</span>Pricing Notes</a>
+  </nav>
+
+  <!-- ═══════ CONTENT ═══════ -->
+  <main class="content">
+
+    <!-- Hero -->
+    <div class="doc-hero">
+      <div class="hero-eyebrow">Documentation</div>
+      <div class="hero-title">Akamai Cloud Compute<br>Cost Calculator</div>
+      <div class="hero-desc">
+        A self-contained, single-file tool for estimating monthly and hourly costs across all Akamai (Linode) compute plan families — including GPU instances and managed Kubernetes.
+      </div>
+      <div class="hero-tags">
+        <span class="hero-tag">40 compute plans</span>
+        <span class="hero-tag">6 plan families</span>
+        <span class="hero-tag">3 GPU families</span>
+        <span class="hero-tag">LKE cluster builder</span>
+        <span class="hero-tag">No dependencies</span>
+      </div>
+    </div>
+
+
+    <!-- ── OVERVIEW ── -->
+    <section class="doc-section" id="overview">
+      <div class="section-title">Overview</div>
+      <div class="section-subtitle">What the calculator does and what it covers</div>
+
+      <p>The <strong>Akamai Compute Cost Calculator</strong> is a standalone HTML file that lets you browse all Akamai Cloud (formerly Linode) compute plan families, configure quantities, and build a running cost estimate — all without needing an account or internet connection after the file is opened.</p>
+      <p>Pricing data is sourced from the Linode public API (<code>api.linode.com/v4/linode/types</code>) and the official pricing page at <code>akamai.com/cloud/pricing</code>, as of early 2026.</p>
+
+      <div class="callout callout-info">
+        <span class="callout-ico">ℹ️</span>
+        <div>Prices shown are <strong>list prices</strong> for core US/EU regions. Distributed compute regions and some specialty regions may have different pricing. Always verify final pricing in the Akamai Cloud Manager before provisioning.</div>
+      </div>
+
+      <h3 class="subsection">What's covered</h3>
+      <div class="plan-type-grid">
+        <div class="plan-type-card ptc-shared">
+          <div class="ptc-header"><span class="ptc-icon">🖥️</span><span class="ptc-name">Shared CPU</span></div>
+          <div class="ptc-range">10 plans · 1–192 GB RAM · 1–32 vCPUs · 25 GB–3.8 TB SSD</div>
+          <div class="ptc-price">From $5/mo</div>
+          <div class="ptc-use">Dev, staging, low-traffic sites, personal projects</div>
+        </div>
+        <div class="plan-type-card ptc-dedicated">
+          <div class="ptc-header"><span class="ptc-icon">⚡</span><span class="ptc-name">Dedicated CPU</span></div>
+          <div class="ptc-range">8 plans · 4–256 GB RAM · 2–56 vCPUs · 80 GB–5 TB SSD</div>
+          <div class="ptc-price">From $36/mo</div>
+          <div class="ptc-use">Production apps, CI/CD, databases, sustained workloads</div>
+        </div>
+        <div class="plan-type-card ptc-premium">
+          <div class="ptc-header"><span class="ptc-icon">💎</span><span class="ptc-name">Premium CPU</span></div>
+          <div class="ptc-range">8 plans · 4–256 GB RAM · 2–56 vCPUs · 80 GB–5 TB SSD</div>
+          <div class="ptc-price">From $43/mo</div>
+          <div class="ptc-use">Latency-sensitive enterprise workloads, 5th Gen AMD EPYC</div>
+        </div>
+        <div class="plan-type-card ptc-highmem">
+          <div class="ptc-header"><span class="ptc-icon">🧠</span><span class="ptc-name">High Memory</span></div>
+          <div class="ptc-range">5 plans · 24–300 GB RAM · 2–16 vCPUs · 20–340 GB SSD</div>
+          <div class="ptc-price">From $60/mo</div>
+          <div class="ptc-use">In-memory databases, Redis, large caches, analytics</div>
+        </div>
+        <div class="plan-type-card ptc-gpu">
+          <div class="ptc-header"><span class="ptc-icon">🎮</span><span class="ptc-name">GPU Compute</span></div>
+          <div class="ptc-range">9 plans across 3 GPU families · 1–4 GPUs per instance</div>
+          <div class="ptc-price">From $350/mo</div>
+          <div class="ptc-use">AI/ML training &amp; inference, rendering, data processing</div>
+        </div>
+        <div class="plan-type-card ptc-lke">
+          <div class="ptc-header"><span class="ptc-icon">☸️</span><span class="ptc-name">Kubernetes (LKE)</span></div>
+          <div class="ptc-range">Interactive cluster builder · 3 control plane tiers</div>
+          <div class="ptc-price">From $0 control plane</div>
+          <div class="ptc-use">Managed Kubernetes with configurable node pools</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── INTERFACE ── -->
+    <section class="doc-section" id="interface">
+      <div class="section-title">Interface Layout</div>
+      <div class="section-subtitle">Understanding the two-column layout and key components</div>
+
+      <div class="ui-diagram">
+<span class="dim">┌──────────────────────────────────────────────────────────────┐</span>
+<span class="dim">│</span> <span class="hi">HEADER</span>  Akamai Cloud  │  Cost Calculator  <span class="label">[Monthly] [Hourly]</span> <span class="dim">│</span>
+<span class="dim">├──────────────────────────────────────────────────┬───────────┤</span>
+<span class="dim">│</span> <span class="label">TAB BAR</span> <span class="hi">[Shared] [Dedicated] [Premium]</span> [HighMem]  <span class="dim">│</span>           <span class="dim">│</span>
+<span class="dim">│         [GPU] [Kubernetes]</span>                      <span class="dim">│</span> <span class="hi">ESTIMATE</span>  <span class="dim">│</span>
+<span class="dim">├──────────────────────────────────────────────────┤</span>  <span class="hi">SIDEBAR</span>  <span class="dim">│</span>
+<span class="dim">│</span>                                                  <span class="dim">│</span>           <span class="dim">│</span>
+<span class="dim">│</span>  <span class="label">PLAN CARDS GRID</span>                               <span class="dim">│</span>  Item 1   <span class="dim">│</span>
+<span class="dim">│</span>  ┌──────────┐  ┌──────────┐  ┌──────────┐      <span class="dim">│</span>  Item 2   <span class="dim">│</span>
+<span class="dim">│</span>  │ Plan name│  │ Plan name│  │ Plan name│      <span class="dim">│</span>  Item 3   <span class="dim">│</span>
+<span class="dim">│</span>  │ Specs    │  │ Specs    │  │ Specs    │      <span class="dim">│</span>  ───────  <span class="dim">│</span>
+<span class="dim">│</span>  │ $xx/mo   │  │ $xx/mo   │  │ $xx/mo   │      <span class="dim">│</span>  <span class="hi">$xxx/mo</span>  <span class="dim">│</span>
+<span class="dim">│</span>  │ [-][n][+]│  │ [-][n][+]│  │ [-][n][+]│      <span class="dim">│</span>           <span class="dim">│</span>
+<span class="dim">│</span>  │ [Add]    │  │ [Add]    │  │ [Add]    │      <span class="dim">│</span>  [Clear]  <span class="dim">│</span>
+<span class="dim">│</span>  └──────────┘  └──────────┘  └──────────┘      <span class="dim">│</span>  [Copy]   <span class="dim">│</span>
+<span class="dim">└──────────────────────────────────────────────────┴───────────┘</span>
+      </div>
+
+      <div class="kv-grid">
+        <div class="kv-row"><div class="kv-key">Header</div><div class="kv-val">Sticky top bar with the Akamai branding and the Monthly / Hourly billing toggle. The selected mode affects all price displays across the entire page.</div></div>
+        <div class="kv-row"><div class="kv-key">Tab bar</div><div class="kv-val">Switches between the 6 compute categories. Horizontal scrolling is supported on smaller screens. The active tab is highlighted in Akamai blue.</div></div>
+        <div class="kv-row"><div class="kv-key">Plan cards</div><div class="kv-val">Responsive grid of plan cards. Each shows specs (RAM, CPU, Storage, Transfer), price, and a quantity selector. Cards with a blue border + tinted background are currently in your estimate.</div></div>
+        <div class="kv-row"><div class="kv-key">Estimate sidebar</div><div class="kv-val">Sticky right panel showing all added items, per-item cost, running total, and action buttons. On screens narrower than 1024 px, the sidebar docks to the bottom of the viewport.</div></div>
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── QUICK START ── -->
+    <section class="doc-section" id="quickstart">
+      <div class="section-title">Quick Start</div>
+      <div class="section-subtitle">Build your first estimate in under a minute</div>
+
+      <div class="card">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-title">Open the calculator</div>
+              <div class="step-desc">Open <code>akamai-cost-calculator.html</code> in any modern browser. No internet connection or server is needed — everything runs locally.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-title">Choose a plan category</div>
+              <div class="step-desc">Click a tab — <strong>Shared CPU</strong>, <strong>Dedicated CPU</strong>, <strong>Premium CPU</strong>, <strong>High Memory</strong>, <strong>GPU Compute</strong>, or <strong>Kubernetes (LKE)</strong> — to browse plans in that family.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-title">Set quantity and add</div>
+              <div class="step-desc">Use the <strong>−</strong> / <strong>+</strong> buttons on a plan card to set how many instances you need, then click <strong>Add to Estimate</strong>. The card turns blue and the item appears in the sidebar.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div>
+              <div class="step-title">Repeat across categories</div>
+              <div class="step-desc">Switch to other tabs and add more plan types. The estimate accumulates across all categories — you can mix Shared, Dedicated, GPU, and LKE clusters in one estimate.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div>
+              <div class="step-title">Copy or clear</div>
+              <div class="step-desc">Click <strong>📋 Copy Estimate</strong> to copy a formatted plain-text summary to your clipboard for sharing or pasting into a doc. Click <strong>Clear</strong> to reset and start over.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-ico">💡</span>
+        <div>Use the <strong>Monthly / Hourly toggle</strong> in the header to see prices in the unit that makes most sense for your planning. Both values are always shown in the secondary line on each card.</div>
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── SHARED CPU ── -->
+    <section class="doc-section" id="shared-cpu">
+      <div class="section-title">Shared CPU Plans</div>
+      <div class="section-subtitle"><span class="bdg bdg-blue">Shared CPU</span> &nbsp; 10 plans · Starting at $5/mo</div>
+
+      <p>Shared CPU Linodes give you a balanced set of resources at the lowest price point. CPU cores are <em>shared</em> with other tenants — your processes are scheduled alongside others on the same physical core. Workloads that can tolerate occasional CPU contention benefit most from these plans.</p>
+
+      <div class="callout callout-warn">
+        <span class="callout-ico">⚠️</span>
+        <div>Sustained CPU usage above ~80% is not recommended on Shared plans. For workloads that need consistent, full-core performance, use Dedicated or Premium CPU instead.</div>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>Plan</th><th>RAM</th><th>vCPUs</th><th>SSD</th><th>Transfer</th><th>Monthly</th><th>Hourly</th></tr></thead>
+        <tbody>
+          <tr><td>Nanode 1GB</td><td>1 GB</td><td>1</td><td>25 GB</td><td>1 TB</td><td class="price">$5</td><td class="muted">$0.0075</td></tr>
+          <tr><td>Linode 2GB</td><td>2 GB</td><td>1</td><td>50 GB</td><td>2 TB</td><td class="price">$12</td><td class="muted">$0.018</td></tr>
+          <tr><td>Linode 4GB</td><td>4 GB</td><td>2</td><td>80 GB</td><td>4 TB</td><td class="price">$24</td><td class="muted">$0.036</td></tr>
+          <tr><td>Linode 8GB</td><td>8 GB</td><td>4</td><td>160 GB</td><td>5 TB</td><td class="price">$48</td><td class="muted">$0.072</td></tr>
+          <tr><td>Linode 16GB</td><td>16 GB</td><td>6</td><td>320 GB</td><td>8 TB</td><td class="price">$96</td><td class="muted">$0.144</td></tr>
+          <tr><td>Linode 32GB</td><td>32 GB</td><td>8</td><td>640 GB</td><td>16 TB</td><td class="price">$192</td><td class="muted">$0.288</td></tr>
+          <tr><td>Linode 64GB</td><td>64 GB</td><td>16</td><td>1.3 TB</td><td>20 TB</td><td class="price">$384</td><td class="muted">$0.576</td></tr>
+          <tr><td>Linode 96GB</td><td>96 GB</td><td>20</td><td>1.9 TB</td><td>20 TB</td><td class="price">$576</td><td class="muted">$0.864</td></tr>
+          <tr><td>Linode 128GB</td><td>128 GB</td><td>24</td><td>2.5 TB</td><td>20 TB</td><td class="price">$768</td><td class="muted">$1.152</td></tr>
+          <tr><td>Linode 192GB</td><td>192 GB</td><td>32</td><td>3.8 TB</td><td>20 TB</td><td class="price">$1,152</td><td class="muted">$1.728</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── DEDICATED CPU ── -->
+    <section class="doc-section" id="dedicated-cpu">
+      <div class="section-title">Dedicated CPU Plans</div>
+      <div class="section-subtitle"><span class="bdg bdg-green">Dedicated CPU</span> &nbsp; 8 plans · Starting at $36/mo</div>
+
+      <p>Dedicated CPU plans reserve full physical CPU cores exclusively for your instance. There is no sharing, so you get 100% of each core's performance at all times — critical for workloads sensitive to CPU jitter or that require sustained high utilisation.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Plan</th><th>RAM</th><th>vCPUs</th><th>SSD</th><th>Transfer</th><th>Monthly</th><th>Hourly</th></tr></thead>
+        <tbody>
+          <tr><td>Dedicated 4GB</td><td>4 GB</td><td>2</td><td>80 GB</td><td>4 TB</td><td class="price">$36</td><td class="muted">$0.054</td></tr>
+          <tr><td>Dedicated 8GB</td><td>8 GB</td><td>4</td><td>160 GB</td><td>5 TB</td><td class="price">$72</td><td class="muted">$0.108</td></tr>
+          <tr><td>Dedicated 16GB</td><td>16 GB</td><td>8</td><td>320 GB</td><td>6 TB</td><td class="price">$144</td><td class="muted">$0.216</td></tr>
+          <tr><td>Dedicated 32GB</td><td>32 GB</td><td>16</td><td>640 GB</td><td>7 TB</td><td class="price">$288</td><td class="muted">$0.432</td></tr>
+          <tr><td>Dedicated 64GB</td><td>64 GB</td><td>32</td><td>1.3 TB</td><td>8 TB</td><td class="price">$576</td><td class="muted">$0.864</td></tr>
+          <tr><td>Dedicated 96GB</td><td>96 GB</td><td>48</td><td>1.9 TB</td><td>9 TB</td><td class="price">$864</td><td class="muted">$1.296</td></tr>
+          <tr><td>Dedicated 128GB</td><td>128 GB</td><td>50</td><td>2.5 TB</td><td>10 TB</td><td class="price">$1,152</td><td class="muted">$1.728</td></tr>
+          <tr><td>Dedicated 256GB</td><td>256 GB</td><td>56</td><td>5 TB</td><td>11 TB</td><td class="price">$2,304</td><td class="muted">$3.456</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── PREMIUM CPU ── -->
+    <section class="doc-section" id="premium-cpu">
+      <div class="section-title">Premium CPU Plans</div>
+      <div class="section-subtitle"><span class="bdg bdg-yellow">Premium CPU</span> &nbsp; 8 plans · Starting at $43/mo</div>
+
+      <p>Premium CPU plans run on <strong>5th Generation AMD EPYC™</strong> processors and guarantee a minimum CPU performance floor — meaning your instance will never be scheduled on older silicon. They are shaped identically to Dedicated plans in terms of RAM, vCPU, and storage, but carry a ~20% price premium for the hardware guarantee.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Plan</th><th>RAM</th><th>vCPUs</th><th>SSD</th><th>Transfer</th><th>Monthly</th><th>Hourly</th></tr></thead>
+        <tbody>
+          <tr><td>Premium 4GB</td><td>4 GB</td><td>2</td><td>80 GB</td><td>4 TB</td><td class="price">$43</td><td class="muted">$0.0645</td></tr>
+          <tr><td>Premium 8GB</td><td>8 GB</td><td>4</td><td>160 GB</td><td>5 TB</td><td class="price">$86</td><td class="muted">$0.129</td></tr>
+          <tr><td>Premium 16GB</td><td>16 GB</td><td>8</td><td>320 GB</td><td>6 TB</td><td class="price">$173</td><td class="muted">$0.2595</td></tr>
+          <tr><td>Premium 32GB</td><td>32 GB</td><td>16</td><td>640 GB</td><td>7 TB</td><td class="price">$346</td><td class="muted">$0.519</td></tr>
+          <tr><td>Premium 64GB</td><td>64 GB</td><td>32</td><td>1.3 TB</td><td>8 TB</td><td class="price">$691</td><td class="muted">$1.0365</td></tr>
+          <tr><td>Premium 96GB</td><td>96 GB</td><td>48</td><td>1.9 TB</td><td>9 TB</td><td class="price">$1,037</td><td class="muted">$1.5555</td></tr>
+          <tr><td>Premium 128GB</td><td>128 GB</td><td>50</td><td>2.5 TB</td><td>10 TB</td><td class="price">$1,382</td><td class="muted">$2.073</td></tr>
+          <tr><td>Premium 256GB</td><td>256 GB</td><td>56</td><td>5 TB</td><td>11 TB</td><td class="price">$2,765</td><td class="muted">$4.1475</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── HIGH MEMORY ── -->
+    <section class="doc-section" id="high-memory">
+      <div class="section-title">High Memory Plans</div>
+      <div class="section-subtitle"><span class="bdg bdg-purple">High Memory</span> &nbsp; 5 plans · Starting at $60/mo</div>
+
+      <p>High Memory plans provide an unusually high RAM-to-CPU ratio — ideal when your workload needs to hold large datasets in memory but doesn't require many CPU cores. Common uses include Redis/Memcached clusters, large PostgreSQL instances, Elasticsearch nodes, and real-time analytics engines.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Plan</th><th>RAM</th><th>vCPUs</th><th>SSD</th><th>Transfer</th><th>Monthly</th><th>Hourly</th></tr></thead>
+        <tbody>
+          <tr><td>Linode 24GB</td><td>24 GB</td><td>2</td><td>20 GB</td><td>5 TB</td><td class="price">$60</td><td class="muted">$0.09</td></tr>
+          <tr><td>Linode 48GB</td><td>48 GB</td><td>2</td><td>40 GB</td><td>6 TB</td><td class="price">$120</td><td class="muted">$0.18</td></tr>
+          <tr><td>Linode 90GB</td><td>90 GB</td><td>4</td><td>90 GB</td><td>7 TB</td><td class="price">$240</td><td class="muted">$0.36</td></tr>
+          <tr><td>Linode 150GB</td><td>150 GB</td><td>8</td><td>200 GB</td><td>8 TB</td><td class="price">$480</td><td class="muted">$0.72</td></tr>
+          <tr><td>Linode 300GB</td><td>300 GB</td><td>16</td><td>340 GB</td><td>9 TB</td><td class="price">$960</td><td class="muted">$1.44</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-info">
+        <span class="callout-ico">ℹ️</span>
+        <div>Note the relatively small SSD allocations on High Memory plans — these plans assume most working data lives in RAM. Attach a Block Storage volume if you need additional persistent disk space.</div>
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── GPU ── -->
+    <section class="doc-section" id="gpu">
+      <div class="section-title">GPU Compute Plans</div>
+      <div class="section-subtitle"><span class="bdg bdg-red">GPU</span> &nbsp; 9 plans across 3 NVIDIA families · Starting at $350/mo</div>
+
+      <p>GPU instances are equipped with NVIDIA data-center GPUs and are designed for workloads that benefit from massive parallelism — AI/ML model training and inference, computer vision, video transcoding, molecular simulation, and real-time graphics rendering.</p>
+      <p>The calculator covers three GPU families, each suited to different workload profiles:</p>
+
+      <div class="gpu-family">
+        <div class="gpu-family-hd">
+          <div class="gpu-family-name">NVIDIA RTX 4000 Ada Generation</div>
+          <span class="gpu-tag tag-std">Available</span>
+        </div>
+        <table class="data-table" style="border-radius:0;box-shadow:none;margin-bottom:0">
+          <thead><tr><th>Config</th><th>GPUs</th><th>VRAM</th><th>RAM</th><th>vCPUs</th><th>NVMe</th><th>Monthly</th><th>Hourly</th></tr></thead>
+          <tbody>
+            <tr><td>1× GPU</td><td>1</td><td>20 GB</td><td>16 GB</td><td>4</td><td>512 GB</td><td class="price">$350</td><td class="muted">$0.52</td></tr>
+            <tr><td>2× GPU</td><td>2</td><td>40 GB</td><td>48 GB</td><td>16</td><td>1 TB</td><td class="price">$700</td><td class="muted">$1.04</td></tr>
+            <tr><td>4× GPU</td><td>4</td><td>80 GB</td><td>96 GB</td><td>32</td><td>2 TB</td><td class="price">$2,388</td><td class="muted">$3.57</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="gpu-family">
+        <div class="gpu-family-hd">
+          <div class="gpu-family-name">NVIDIA Quadro RTX 6000</div>
+          <span class="gpu-tag tag-lim">Limited Availability</span>
+        </div>
+        <table class="data-table" style="border-radius:0;box-shadow:none;margin-bottom:0">
+          <thead><tr><th>Config</th><th>GPUs</th><th>VRAM</th><th>RAM</th><th>vCPUs</th><th>NVMe</th><th>Monthly</th><th>Hourly</th></tr></thead>
+          <tbody>
+            <tr><td>1× GPU</td><td>1</td><td>24 GB</td><td>32 GB</td><td>8</td><td>640 GB</td><td class="price">$1,000</td><td class="muted">$1.50</td></tr>
+            <tr><td>2× GPU</td><td>2</td><td>48 GB</td><td>64 GB</td><td>16</td><td>1.3 TB</td><td class="price">$2,000</td><td class="muted">$3.00</td></tr>
+            <tr><td>4× GPU</td><td>4</td><td>96 GB</td><td>128 GB</td><td>24</td><td>2.5 TB</td><td class="price">$4,000</td><td class="muted">$6.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="gpu-family">
+        <div class="gpu-family-hd">
+          <div class="gpu-family-name">NVIDIA RTX PRO 6000 Blackwell</div>
+          <div style="display:flex;gap:6px">
+            <span class="gpu-tag tag-new">New</span>
+            <span class="gpu-tag tag-lim">Limited Availability</span>
+          </div>
+        </div>
+        <table class="data-table" style="border-radius:0;box-shadow:none;margin-bottom:0">
+          <thead><tr><th>Config</th><th>GPUs</th><th>VRAM</th><th>RAM</th><th>vCPUs</th><th>NVMe</th><th>Monthly</th><th>Hourly</th></tr></thead>
+          <tbody>
+            <tr><td>1× GPU</td><td>1</td><td>96 GB</td><td>176 GB</td><td>16</td><td>1 TB</td><td class="price">$1,665</td><td class="muted">$2.50</td></tr>
+            <tr><td>2× GPU</td><td>2</td><td>192 GB</td><td>352 GB</td><td>32</td><td>2 TB</td><td class="price">$3,330</td><td class="muted">$5.00</td></tr>
+            <tr><td>4× GPU</td><td>4</td><td>384 GB</td><td>704 GB</td><td>64</td><td>4 TB</td><td class="price">$6,660</td><td class="muted">$10.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warn">
+        <span class="callout-ico">⚠️</span>
+        <div>GPU plans marked <strong>Limited Availability</strong> may not be available in all regions. Check the Akamai Cloud Manager for current region availability before planning a deployment.</div>
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── LKE ── -->
+    <section class="doc-section" id="lke">
+      <div class="section-title">Kubernetes (LKE)</div>
+      <div class="section-subtitle"><span class="bdg bdg-cyan">LKE</span> &nbsp; Interactive cluster builder with 3 control plane tiers</div>
+
+      <p>The LKE tab provides an interactive cluster cost builder rather than a fixed plan grid. You configure two independent dimensions — the control plane tier and the worker node pools — and the calculator shows the combined monthly cost.</p>
+
+      <h3 class="subsection">Control Plane Tiers</h3>
+      <div class="lke-cp-grid">
+        <div class="lke-cp-card">
+          <div class="lke-cp-name">Standard</div>
+          <div class="lke-cp-price">Free</div>
+          <div class="lke-cp-desc">Shared control plane managed by Akamai. Suitable for dev, test, and non-critical production clusters.</div>
+        </div>
+        <div class="lke-cp-card">
+          <div class="lke-cp-name">High Availability</div>
+          <div class="lke-cp-price">+$60/mo</div>
+          <div class="lke-cp-desc">Redundant control plane across multiple availability zones. Recommended for production clusters with uptime SLAs.</div>
+        </div>
+        <div class="lke-cp-card">
+          <div class="lke-cp-name">LKE Enterprise</div>
+          <div class="lke-cp-price">+$300/mo</div>
+          <div class="lke-cp-desc">Dedicated control plane + all enterprise features including enhanced support. For business-critical and regulated workloads.</div>
+        </div>
+      </div>
+
+      <h3 class="subsection">Node Pools</h3>
+      <p>Each node pool consists of a <strong>node type</strong> (Shared, Dedicated, or High Memory) and a <strong>node count</strong>. The pool cost is simply <code>node_price × node_count</code>. You can add multiple pools of different types to model heterogeneous clusters.</p>
+
+      <div class="callout callout-info">
+        <span class="callout-ico">ℹ️</span>
+        <div>
+          <strong>LKE pricing formula:</strong><br>
+          <code>Cluster cost = Control plane fee + Σ(node_monthly_price × node_count)</code><br><br>
+          For example: HA control plane ($60) + 3× Linode 4GB nodes ($24 each) = <strong>$132/mo</strong>
+        </div>
+      </div>
+
+      <p>Click <strong>Add to Estimate</strong> in the LKE cluster summary bar to add the entire configured cluster as a single line item in your estimate sidebar. You can add multiple clusters with different configurations.</p>
+
+      <h3 class="subsection">Available Node Types in LKE</h3>
+      <p>Node pools support Shared CPU, Dedicated CPU, and High Memory instance types. GPU nodes are not available in LKE node pools via this calculator. Available node options span from the <strong>Nanode 1GB ($5/mo)</strong> up to the <strong>Linode 192GB ($1,152/mo)</strong> on the Shared side, and <strong>Dedicated 256GB ($2,304/mo)</strong> on the Dedicated side.</p>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── BILLING ── -->
+    <section class="doc-section" id="billing">
+      <div class="section-title">Billing Model</div>
+      <div class="section-subtitle">How Akamai Cloud calculates your actual invoice</div>
+
+      <p>Akamai uses a <strong>hybrid hourly billing model</strong> with a monthly cap. You are charged per hour for what you use, but once your accumulated hourly charges reach the plan's monthly cap, you are not charged further for that resource that month.</p>
+
+      <div class="kv-grid">
+        <div class="kv-row"><div class="kv-key">Billing unit</div><div class="kv-val">Hourly, rounded up to the nearest full hour.</div></div>
+        <div class="kv-row"><div class="kv-key">Monthly cap</div><div class="kv-val">Usage never exceeds the stated monthly price. Once the cap is reached, that resource is effectively "free" for the rest of the month.</div></div>
+        <div class="kv-row"><div class="kv-key">Inbound transfer</div><div class="kv-val">Always free. Does not count against your transfer quota.</div></div>
+        <div class="kv-row"><div class="kv-key">Outbound transfer</div><div class="kv-val">Each plan includes a monthly outbound transfer pool. Transfer quotas are pooled across all instances on the account.</div></div>
+        <div class="kv-row"><div class="kv-key">Transfer overages</div><div class="kv-val"><strong>$0.005 per GB</strong> over the pooled quota. This is shown as a reminder note in the estimate sidebar.</div></div>
+        <div class="kv-row"><div class="kv-key">LKE control plane</div><div class="kv-val">Billed separately from worker nodes. Standard tier is free; HA adds $60/mo; Enterprise adds $300/mo per cluster.</div></div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-ico">💡</span>
+        <div>The calculator's <strong>Hourly</strong> toggle lets you see what a plan costs per hour. These are the rates that appear on your invoice. Multiply by 744 (avg hours/month) to get the effective monthly cost for a full month of use.</div>
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── ESTIMATE ── -->
+    <section class="doc-section" id="estimate">
+      <div class="section-title">Estimate &amp; Export</div>
+      <div class="section-subtitle">Managing items in the sidebar and copying your estimate</div>
+
+      <h3 class="subsection">Adding items</h3>
+      <p>Set the desired quantity on a plan card using the <strong>−</strong> / <strong>+</strong> buttons, then click <strong>Add to Estimate</strong>. The card visually indicates it has been added (blue border, tinted background). The quantity on the card can be adjusted at any time — changes update the cart total instantly.</p>
+
+      <h3 class="subsection">Removing items</h3>
+      <p>Click the <strong>✕</strong> button next to any line item in the sidebar, or click the plan card's <strong>✓ In Estimate</strong> button to remove it.</p>
+
+      <h3 class="subsection">Clearing all items</h3>
+      <p>The <strong>Clear</strong> button in the sidebar footer removes all items from the estimate at once.</p>
+
+      <h3 class="subsection">Copying the estimate</h3>
+      <p>The <strong>📋 Copy Estimate</strong> button writes a formatted plain-text summary to your clipboard. Example output:</p>
+
+      <div class="ui-diagram">
+Akamai Cloud Compute Estimate
+════════════════════════════════════════
+
+<span class="hi">3× Linode 4GB</span>
+  2 vCPU · 4 GB RAM · 80 GB · 4 TB transfer
+  $72/mo ($24/mo × 3)
+
+<span class="hi">1× Dedicated 16GB</span>
+  8 vCPU · 16 GB RAM · 320 GB · 6 TB transfer
+  $144/mo
+
+<span class="hi">LKE Cluster (High Availability)</span>
+  3× Linode 4GB, 2× Dedicated 8GB
+  $276/mo
+
+════════════════════════════════════════
+<span class="label">TOTAL: $492/month</span>
+       ≈ $0.2276/hour
+
+Pricing sourced from akamai.com/cloud/pricing
+      </div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── PRICING NOTES ── -->
+    <section class="doc-section" id="pricing-notes">
+      <div class="section-title">Pricing Notes &amp; Disclaimers</div>
+      <div class="section-subtitle">What to be aware of before using these estimates</div>
+
+      <div class="callout callout-warn">
+        <span class="callout-ico">⚠️</span>
+        <div><strong>Estimates only.</strong> Prices in this calculator reflect Akamai's published list prices as of early 2026 for standard US/EU regions. Always confirm current pricing in the Akamai Cloud Manager or at <code>akamai.com/cloud/pricing</code> before committing to a deployment.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">What the calculator does NOT include</div>
+        <div class="card-body">
+          <ul style="padding-left:18px;display:flex;flex-direction:column;gap:5px;margin-top:6px">
+            <li><strong>Block Storage volumes</strong> — priced separately ($0.10/GB/mo)</li>
+            <li><strong>NodeBalancers</strong> — load balancers billed at $10/mo each</li>
+            <li><strong>Object Storage</strong> — S3-compatible storage with its own pricing tier</li>
+            <li><strong>Managed Database add-on</strong> — additional fee on top of the underlying instance</li>
+            <li><strong>DNS Manager, Backups, Cloud Firewall</strong> — optional add-on services</li>
+            <li><strong>Distributed compute region pricing</strong> — may differ from core region prices</li>
+            <li><strong>Support plans</strong> — Professional or Enterprise support tiers billed separately</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">GPU plan availability</div>
+        <div class="card-body">GPU plans — especially Quadro RTX 6000 and RTX PRO 6000 Blackwell — are marked <span class="bdg bdg-lim">Limited</span> and may not be available in all regions. Contact Akamai sales or check the Cloud Manager for current availability.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">LKE hourly approximation</div>
+        <div class="card-body">The hourly equivalent shown for LKE clusters is calculated as <code>monthly_cost ÷ (24 × 30)</code> — a rough approximation. Actual billing is based on per-resource hourly rates for each node individually.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="doc-footer">
+  Akamai Cloud Compute Cost Calculator · Documentation · Prices sourced from
+  <a href="https://www.akamai.com/cloud/pricing">akamai.com/cloud/pricing</a> as of early 2026
+</div>
+
+<script>
+  // Active nav link highlighting on scroll
+  const sections = document.querySelectorAll('.doc-section[id]');
+  const navLinks  = document.querySelectorAll('.nav-link');
+
+  function setActive() {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 90) current = s.id;
+    });
+    navLinks.forEach(l => {
+      l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+    });
+  }
+
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+</script>
+</body>
+</html>
