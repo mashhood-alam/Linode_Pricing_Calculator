@@ -416,6 +416,19 @@
       justify-content: space-between;
     }
     .cart-hd-title { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    /* Mobile-only right section of the header bar (hidden on desktop) */
+    .cart-hd-right { display: none; align-items: center; gap: 10px; }
+    .cart-hd-total { font-size: 14px; font-weight: 800; color: var(--primary); }
+    .cart-chevron  {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: var(--text-muted);
+      transition: transform .25s ease;
+      flex-shrink: 0;
+    }
+    .sidebar.expanded .cart-chevron { transform: rotate(180deg); }
     .cart-badge {
       background: var(--primary);
       color: white;
@@ -521,24 +534,21 @@
 
     /* ── Responsive ── */
 
-    /* Tablet & below — sidebar moves to fixed bottom drawer */
+    /* Tablet & below — sidebar moves below the plan content (in page flow) */
     @media (max-width: 1024px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar {
-        position: fixed; bottom: 0; left: 0; right: 0;
-        height: auto; max-height: 50vh;
-        border-left: none; border-top: 2px solid var(--border);
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -4px 24px rgba(0,0,0,.15);
-        z-index: 100;
+        position: static;   /* in document flow — scrollable like the rest of the page */
+        height: auto;
+        border-left: none;
+        border-top: 2px solid var(--border);
       }
-      .cart-body { max-height: 160px; }
-      .main { padding-bottom: 320px; }
-      /* Move toast above the bottom drawer */
+      /* Cart body: show all items without a scroll cap */
+      .cart-body { max-height: none; overflow: visible; }
+      /* Toast: back to its normal bottom position */
       .toast {
-        bottom: auto;
-        top: 72px;
-        transform: translateX(-50%) translateY(-80px);
+        bottom: 24px; top: auto;
+        transform: translateX(-50%) translateY(80px);
       }
       .toast.show { transform: translateX(-50%) translateY(0); }
     }
@@ -546,7 +556,7 @@
     /* Medium screens — hide header noise, tighten padding */
     @media (max-width: 768px) {
       .header-note { display: none; }
-      .main { padding: 16px; padding-bottom: 320px; }
+      .main { padding: 16px; }
       .tab-btn { padding: 7px 12px; font-size: 12px; }
       .plans-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
     }
@@ -585,9 +595,9 @@
       /* LKE added-to-estimate rows */
       .lke-added-detail  { white-space: normal; }
 
-      /* Sidebar drawer */
-      .cart-hd  { padding: 14px 16px 12px; }
-      .cart-body{ padding: 12px 16px; max-height: 140px; }
+      /* Sidebar — tighten padding on small phones */
+      .cart-hd  { padding: 13px 16px; }
+      .cart-body{ padding: 12px 16px; }
       .cart-ft  { padding: 14px 16px; }
       .total-amount { font-size: 26px; }
       .cart-empty { padding: 20px 16px; }
@@ -598,7 +608,7 @@
     @media (max-width: 400px) {
       .logo span   { display: none; }
       .logo-mark   { width: 30px; height: 30px; font-size: 15px; border-radius: 7px; }
-      .main        { padding: 12px; padding-bottom: 320px; }
+      .main        { padding: 12px; }
       .plan-card   { padding: 14px; gap: 10px; }
       .gpu-hero    { padding: 10px 12px; }
       .gpu-hero-count { font-size: 22px; }
@@ -640,10 +650,14 @@
   </main>
 
   <aside class="sidebar">
-    <div class="cart-hd">
+    <div class="cart-hd" onclick="toggleSidebar()">
       <div class="cart-hd-title">
         Your Estimate
         <span class="cart-badge" id="cartCount">0</span>
+      </div>
+      <div class="cart-hd-right">
+        <span class="cart-hd-total" id="cartHdTotal"></span>
+        <span class="cart-chevron">▲</span>
       </div>
     </div>
     <div class="cart-body" id="cartBody">
@@ -1071,12 +1085,14 @@ function addLKEToCart() {
 }
 
 function renderCart() {
-  const items  = Object.values(cart);
-  const count  = items.reduce((s,i) => s + i.qty, 0);
+  const items   = Object.values(cart);
+  const count   = items.reduce((s,i) => s + i.qty, 0);
   document.getElementById('cartCount').textContent = count;
 
-  const body = document.getElementById('cartBody');
-  const ft   = document.getElementById('cartFt');
+  const body    = document.getElementById('cartBody');
+  const ft      = document.getElementById('cartFt');
+  const hdTotal = document.getElementById('cartHdTotal');
+  const sidebar = document.querySelector('.sidebar');
 
   if (!items.length) {
     body.innerHTML = `
@@ -1086,6 +1102,8 @@ function renderCart() {
         <div class="cart-empty-desc">Use the − / + buttons on any plan<br>to add it to your estimate.</div>
       </div>`;
     ft.style.display = 'none';
+    if (hdTotal) hdTotal.textContent = '';
+    if (sidebar) sidebar.classList.remove('expanded');
     return;
   }
 
@@ -1115,6 +1133,10 @@ function renderCart() {
   ft.style.display = 'block';
   document.getElementById('totalAmt').textContent = `$${totalM.toFixed(0)}`;
   document.getElementById('totalHourly').textContent = `≈ $${totalH.toFixed(4)}/hr`;
+
+  // Update collapsed-bar total and auto-expand when items are present
+  if (hdTotal) hdTotal.textContent = `$${totalM.toFixed(0)}/mo`;
+  if (sidebar && !sidebar.classList.contains('expanded')) sidebar.classList.add('expanded');
 }
 
 // ═══════════════════════════════════════
@@ -1154,6 +1176,13 @@ function copyEstimate() {
   navigator.clipboard.writeText(txt)
     .then(() => toast('Estimate copied to clipboard!'))
     .catch(() => toast('Could not access clipboard'));
+}
+
+// ═══════════════════════════════════════
+//  SIDEBAR TOGGLE (mobile drawer)
+// ═══════════════════════════════════════
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('expanded');
 }
 
 // ═══════════════════════════════════════
