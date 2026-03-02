@@ -520,20 +520,91 @@
     .cart-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     /* ── Responsive ── */
+
+    /* Tablet & below — sidebar moves to fixed bottom drawer */
     @media (max-width: 1024px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar {
         position: fixed; bottom: 0; left: 0; right: 0;
-        height: auto; max-height: 55vh;
+        height: auto; max-height: 50vh;
         border-left: none; border-top: 2px solid var(--border);
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 24px rgba(0,0,0,.15);
         z-index: 100;
       }
-      .cart-body { max-height: 180px; }
+      .cart-body { max-height: 160px; }
       .main { padding-bottom: 320px; }
+      /* Move toast above the bottom drawer */
+      .toast {
+        bottom: auto;
+        top: 72px;
+        transform: translateX(-50%) translateY(-80px);
+      }
+      .toast.show { transform: translateX(-50%) translateY(0); }
     }
+
+    /* Medium screens — hide header noise, tighten padding */
+    @media (max-width: 768px) {
+      .header-note { display: none; }
+      .main { padding: 16px; padding-bottom: 320px; }
+      .tab-btn { padding: 7px 12px; font-size: 12px; }
+      .plans-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    }
+
+    /* Small phones — lean header, single-column everything */
     @media (max-width: 640px) {
-      .cp-grid { grid-template-columns: 1fr; }
-      .plans-grid { grid-template-columns: 1fr; }
+      /* Header: strip to logo + billing toggle */
+      .header-sep    { display: none; }
+      .header-subtitle { display: none; }
+      .header        { padding: 0 16px; gap: 12px; }
+      .billing-toggle button { padding: 5px 11px; font-size: 11px; }
+
+      /* Tabs */
+      .tabs { padding: 4px; gap: 2px; margin-bottom: 16px; }
+      .tab-btn { padding: 6px 10px; font-size: 11px; gap: 3px; }
+
+      /* Plan grid — true single column */
+      .cp-grid      { grid-template-columns: 1fr; }
+      .plans-grid   { grid-template-columns: 1fr; }
+
+      /* Plan card */
+      .plan-card    { padding: 16px; gap: 12px; }
+      .price-main   { font-size: 22px; }
+
+      /* LKE pool row — select spans full width, controls on row below */
+      .pool-row     { flex-wrap: wrap; }
+      .pool-select  { flex: unset; width: 100%; order: 1; }
+      .qty-wrap     { flex: 1;     order: 2; }
+      .pool-cost    {              order: 3; }
+      .pool-rm      {              order: 4; }
+
+      /* LKE summary bar — stack cost + button */
+      .lke-summary-bar   { flex-direction: column; gap: 12px; align-items: stretch; }
+      .btn-add-cluster   { width: 100%; text-align: center; padding: 13px; }
+
+      /* LKE added-to-estimate rows */
+      .lke-added-detail  { white-space: normal; }
+
+      /* Sidebar drawer */
+      .cart-hd  { padding: 14px 16px 12px; }
+      .cart-body{ padding: 12px 16px; max-height: 140px; }
+      .cart-ft  { padding: 14px 16px; }
+      .total-amount { font-size: 26px; }
+      .cart-empty { padding: 20px 16px; }
+      .cart-empty-ico { font-size: 32px; margin-bottom: 8px; }
+    }
+
+    /* Very small phones — hide logo wordmark, ultra-compact */
+    @media (max-width: 400px) {
+      .logo span   { display: none; }
+      .logo-mark   { width: 30px; height: 30px; font-size: 15px; border-radius: 7px; }
+      .main        { padding: 12px; padding-bottom: 320px; }
+      .plan-card   { padding: 14px; gap: 10px; }
+      .gpu-hero    { padding: 10px 12px; }
+      .gpu-hero-count { font-size: 22px; }
+      .section-hd h2  { font-size: 16px; }
+      .section-hd p   { font-size: 12px; }
+      .lke-block { padding: 16px; }
     }
   </style>
 </head>
